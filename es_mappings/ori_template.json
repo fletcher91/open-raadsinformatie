@@ -206,7 +206,10 @@
                     "type": "text",
                     "index": "false",
                     "doc_values": "false"
-                }
+                },
+                "districts": { "type": "keyword" },
+                "neighborhoods": { "type": "keyword" },
+                "annotations": { "type": "object", "enabled": "false" }
             }
         }
     }

@@ -195,7 +195,7 @@ AVAILABLE_FACETS = {
                 'field': 'end_date',
                 'interval': 'month'
             }
-        }
+        },
     },
     'motions': {
         'classification': {
@@ -278,6 +278,18 @@ AVAILABLE_FACETS = {
             'terms': {
                 'field': 'classification',
                 'size': 10
+            }
+        },
+        'neighborhoods': {
+            'terms': {
+                'field': 'neighborhoods',
+                'size': 10,
+            }
+        },
+        'districts': {
+            'terms': {
+                'field': 'districts',
+                'size': 10,
             }
         }
     }
