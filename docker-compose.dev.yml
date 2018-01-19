@@ -1,9 +1,41 @@
 version: "2.1"
+
 services:
-  backend:
-    volumes:
-      - .:/opt/ori
-    command: /opt/ori/bin/backend.sh
-  frontend:
-    volumes:
-      - ./ocd_frontend:/opt/ori/ocd_frontend
+    backend:
+        build: '.'
+        ports:
+            - "81:5555"
+        volumes:
+            - .:/opt/ori
+        command: /opt/ori/bin/backend.sh
+
+    frontend:
+        build: '.'
+        volumes:
+            - ./ocd_frontend:/opt/ori/ocd_frontend
+        command: ./manage.py frontend runserver
+        ports:
+            - "5000:5000"
+
+    redis:
+        image: 'redis'
+        ports:
+            - "6379:6379"
+
+    elasticsearch:
+        image: "docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION}"
+        environment:
+            - network.host=0.0.0.0
+            - http.host=0.0.0.0
+            - node.master=true
+            - xpack.security.enabled=false
+        volumes:
+            - esdata:/usr/share/elasticsearch/data
+        ports:
+            - "9200:9200"
+
+volumes:
+    esdata:
+        driver: local
+    redisdata:
+        driver: local
