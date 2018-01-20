@@ -32,7 +32,8 @@ if not re.match(mun_code_re_str, args.municipality_code):
 
 
 def geocode_collection(source_index, municipality_code):
-    print('Geocoding {} into {}'.format(source_index, municipality_code))
+    waaroverheid_index = 'wo_{}'.format(municipality_code.lower())
+    print('Geocoding {} into {}'.format(source_index, waaroverheid_index))
     total_count = es.count(index=source_index)['count']
 
     chunk_size = 25
@@ -48,7 +49,7 @@ def geocode_collection(source_index, municipality_code):
     new_items = []
     with tqdm(total=total_count) as progress_bar:
         for item in items:
-            item['_index'] = 'wo_{}'.format(municipality_code.lower())
+            item['_index'] = waaroverheid_index
             del item['_score']
             item['_source'].pop('source_data')
             item['_source'].pop('combined_index_data')
