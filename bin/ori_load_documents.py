@@ -51,10 +51,11 @@ def geocode_collection(source_index, municipality_code):
             item['_index'] = 'wo_{}'.format(municipality_code.lower())
             del item['_score']
             item['_source'].pop('source_data')
-            if 'meta' in item:
-                item['meta'] = {
+            item['_source'].pop('combined_index_data')
+            if 'meta' in item['_source']:
+                item['_source']['meta'] = {
                     k: v
-                    for k, v in item['meta'].items()
+                    for k, v in item['_source']['meta'].items()
                     if not k.startswith('_')
                 }
 
@@ -70,6 +71,7 @@ def geocode_collection(source_index, municipality_code):
 
 
 def get_fields_to_annotate(doc, doc_type):
+    # TODO: description,
     if doc_type == 'event':
         return doc.get('sources', [])
     else:
