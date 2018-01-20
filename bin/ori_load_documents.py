@@ -112,9 +112,9 @@ def annotate_document(doc, municipality_code):
         annotations['neighborhoods'].update(data['neighborhoods'])
 
     # convert to lists to make sure we can serialize to JSON
-    doc['districts'] = sorted(annotations['districts'])
-    doc['neighborhoods'] = sorted(annotations['neighborhoods'])
-    doc['annotations'] = annotations['annotations']
+    doc['_source']['districts'] = sorted(annotations['districts'])
+    doc['_source']['neighborhoods'] = sorted(annotations['neighborhoods'])
+    doc['_source']['annotations'] = annotations['annotations']
     return doc
 
 
