@@ -2,52 +2,81 @@
 
 from __future__ import print_function, unicode_literals
 
+import argparse
+import re
+
 import requests
 from elasticsearch import Elasticsearch
+from elasticsearch.helpers import scan, bulk
+from tqdm import tqdm
 
 
-GM_CODE = 'GM0344'
-ORI_API_URL = "http://api.openraadsinformatie.nl/v0"
+parser = argparse.ArgumentParser()
+parser.add_argument("source_collection", help="The ES index used as data source")
+parser.add_argument("municipality_code", help="CBS municipality code 'GM\d\d\d\d'")
+args = parser.parse_args()
+
+
 ES_HOST = 'localhost'
 ES_PORT = 9200
 
 es = Elasticsearch([{'host': ES_HOST, 'port': ES_PORT}])
 
+# input validation
+if not es.indices.exists(index=args.source_collection):
+    print('Source collection {} cannot be found'.format(args.source_collection))
 
-def iter_documents(source, type_, cursor=0):
-    url = "{url}/{source}/{type}/search".format(
-        url=ORI_API_URL, source=source, type=type_)
+mun_code_re_str = r'GM\d{4}$'
+if not re.match(mun_code_re_str, args.municipality_code):
+    print('Municipality code must match the regex r"{}"'.format(mun_code_re_str))
 
-    while True:
-        resp = requests.post(url, json={
-            'size': 20,
-            'from': cursor,
-        })
 
-        if not resp.ok:
-            print("ERROR fetching docs: ", resp.status_code, resp.text)
-            if raw_input('continue (y/n)? ').lower() == 'y':
-                cursor += 20
-                continue
-            return
+def geocode_collection(source_index, municipality_code):
+    print('Geocoding {} into {}'.format(source_index, municipality_code))
+    total_count = es.count(index=source_index)
 
-        results = resp.json()['events']
-        for doc in results:
-            yield doc
+    chunk_size = 25
+    items = scan(
+        es,
+        query=None,
+        index=source_index,
+        scroll='10m',
+        size=chunk_size,
+        raise_on_error=False,
+    )
 
-        # see if we need to stop or fetch more docs
-        if len(results) < 20:
-            break
-        else:
-            cursor += 20
+    new_items = []
+    with tqdm(total=total_count) as progress_bar:
+        for item in items:
+            item['_index'] = municipality_code
+            del item['_score']
+            item['_source'].pop('source_data')
+            if 'meta' in item:
+                item['meta'] = {
+                    k: v
+                    for k, v in item['meta'].items()
+                    if not k.startswith('_')
+                }
+
+            annotated_item = annotate_document(item, municipality_code)
+            new_items.append(annotated_item)
+            if len(new_items) >= chunk_size:
+                bulk(es, new_items, chunk_size=chunk_size, request_timeout=120)
+                progress_bar.update(chunk_size)
+                new_items = []
+
+        bulk(es, new_items, chunk_size=chunk_size, request_timeout=120)
+        progress_bar.update(len(new_items))
 
 
 def get_fields_to_annotate(doc, doc_type):
     if doc_type == 'event':
         return doc.get('sources', [])
+    else:
+        return None
 
 
-def annotate_document(doc, gm_code):
+def annotate_document(doc, municipality_code):
     # they're sets because we want to keep duplicates away
     annotations = {
         'districts': set(),
@@ -55,10 +84,17 @@ def annotate_document(doc, gm_code):
         'neighborhoods': set(),
     }
 
-    for source in get_fields_to_annotate(doc, 'event'):
+    text_fields = get_fields_to_annotate(doc, doc['_type'])
+    if not text_fields:
+        return doc
+
+    for source in text_fields:
+        clean_text = source['description'].replace('-\n', '')
+        source['description'] = clean_text
+
         resp = requests.post('https://api.waaroverheid.nl/annotate', json={
-            'municipality_code': gm_code,
-            'text': source['description']
+            'municipality_code': municipality_code,
+            'text': clean_text
         })
 
         if not resp.ok:
@@ -72,26 +108,11 @@ def annotate_document(doc, gm_code):
         annotations['neighborhoods'].update(data['neighborhoods'])
 
     # convert to lists to make sure we can serialize to JSON
-    doc['districts'] = list(annotations['districts'])
-    doc['neighborhoods'] = list(annotations['neighborhoods'])
+    doc['districts'] = sorted(annotations['districts'])
+    doc['neighborhoods'] = sorted(annotations['neighborhoods'])
     doc['annotations'] = annotations['annotations']
     return doc
 
 
-def store_documents(index_name, documents):
-    for idx, document in enumerate(documents):
-        print('{}: Annotating document {}: {}'.format(
-            idx, document['meta']['_type'], document['name']))
-        document = annotate_document(document, GM_CODE)
-        document['hidden'] = False
-        es.index(
-            index=index_name,
-            id=document['id'],
-            doc_type=document['meta']['_type'],
-            body=document
-        )
-
-
 if __name__ == "__main__":
-    docs = iter_documents('utrecht', 'events')
-    store_documents('ori_combined_index', docs)
+    geocode_collection(args.source_collection, args.municipality_code)
