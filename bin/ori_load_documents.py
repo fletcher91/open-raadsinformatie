@@ -48,7 +48,7 @@ def geocode_collection(source_index, municipality_code):
     new_items = []
     with tqdm(total=total_count) as progress_bar:
         for item in items:
-            item['_index'] = municipality_code
+            item['_index'] = 'wo_{}'.format(municipality_code.lower())
             del item['_score']
             item['_source'].pop('source_data')
             if 'meta' in item:
