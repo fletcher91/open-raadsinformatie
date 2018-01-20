@@ -33,7 +33,7 @@ if not re.match(mun_code_re_str, args.municipality_code):
 
 def geocode_collection(source_index, municipality_code):
     print('Geocoding {} into {}'.format(source_index, municipality_code))
-    total_count = es.count(index=source_index)
+    total_count = es.count(index=source_index)['count']
 
     chunk_size = 25
     items = scan(
