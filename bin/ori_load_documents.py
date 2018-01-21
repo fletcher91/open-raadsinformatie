@@ -14,8 +14,8 @@ from tqdm import tqdm
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("source_collection", help="The ES index used as data source")
-parser.add_argument("municipality_code", help="CBS municipality code 'GM\d\d\d\d'")
+parser.add_argument('source_collection', help='The ES index used as data source')
+parser.add_argument('municipality_code', help='CBS municipality code "GM\d\d\d\d"')
 args = parser.parse_args()
 
 
@@ -107,14 +107,14 @@ def annotate_document(doc, municipality_code):
         })
 
         if not resp.ok:
-            print("ERROR annotating: ", resp.status_code, resp.text)
+            print('ERROR annotating: ', resp.status_code, resp.text)
             errors.append({
                 'doc_id': doc['_id'],
                 'doc_type': doc['_type'],
                 'doc_index': doc['_index'],
                 'municipality_code': municipality_code,
                 'text': clean_text,
-                'time': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             })
             continue
 
@@ -136,5 +136,5 @@ def annotate_document(doc, municipality_code):
     return doc
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     geocode_collection(args.source_collection, args.municipality_code)
