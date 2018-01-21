@@ -3,7 +3,9 @@
 from __future__ import print_function, unicode_literals
 
 import argparse
+import json
 import re
+from datetime import datetime
 
 import requests
 from elasticsearch import Elasticsearch
@@ -92,6 +94,7 @@ def annotate_document(doc, municipality_code):
     if not text_fields:
         return doc
 
+    errors = []
     for source in text_fields:
         clean_text = source['description'].replace('-\n', '')
         source['description'] = clean_text
@@ -103,7 +106,14 @@ def annotate_document(doc, municipality_code):
 
         if not resp.ok:
             print("ERROR annotating: ", resp.status_code, resp.text)
-            print(resp.request.body)
+            errors.append({
+                'doc_id': doc['_id'],
+                'doc_type': doc['_type'],
+                'doc_index': doc['_index'],
+                'municipality_code': municipality_code,
+                'text': clean_text,
+                'time': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
             continue
 
         data = resp.json()
@@ -115,6 +125,12 @@ def annotate_document(doc, municipality_code):
     doc['_source']['districts'] = sorted(annotations['districts'])
     doc['_source']['neighborhoods'] = sorted(annotations['neighborhoods'])
     doc['_source']['annotations'] = annotations['annotations']
+
+    # write errors to json lines
+    with open('log/geocoding_errors_{}.log'.format(municipality_code), 'a') as f:
+        for error_dict in errors:
+            f.write(json.dumps(error_dict) + '\n')
+
     return doc
 
 
