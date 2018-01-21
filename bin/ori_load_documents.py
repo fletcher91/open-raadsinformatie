@@ -108,14 +108,17 @@ def annotate_document(doc, municipality_code):
 
         if not resp.ok:
             print('ERROR annotating: ', resp.status_code, resp.text)
-            errors.append({
+            error_dict = {
                 'doc_id': doc['_id'],
                 'doc_type': doc['_type'],
                 'doc_index': doc['_index'],
                 'municipality_code': municipality_code,
-                'text': clean_text,
+                'status_code': resp.status_code,
                 'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            })
+            }
+            if resp.status_code == 500:
+                error_dict['text'] = clean_text
+            errors.append(error_dict)
             continue
 
         data = resp.json()
