@@ -74,7 +74,7 @@ def geocode_collection(source_index, municipality_code):
 def get_fields_to_annotate(doc, doc_type):
     # TODO: description,
     body = doc['_source']
-    if doc_type == 'event':
+    if doc_type == 'events':
         return body.get('sources', [])
     else:
         return None
