@@ -96,8 +96,10 @@ def annotate_document(doc, municipality_code):
 
     errors = []
     for source in text_fields:
-        clean_text = source['description'].replace('-\n', '')
+        clean_text = source.get('description', '').replace('-\n', '')
         source['description'] = clean_text
+        if not clean_text:
+            continue
 
         resp = requests.post('https://api.waaroverheid.nl/annotate', json={
             'municipality_code': municipality_code,
