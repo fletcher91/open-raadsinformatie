@@ -74,19 +74,23 @@ def geocode_collection(source_index, municipality_code):
 
 
 def get_fields_to_annotate(doc, doc_type):
-    # TODO: description,
     body = doc['_source']
     if doc_type == 'events':
-        return body.get('sources', [])
+        return [body] + body.get('sources', [])
+    elif doc_type == 'vote_events':
+        motion = body.get('motion')
+        if motion:
+            return [motion] + body.get('sources', [])
+        else:
+            return body.get('sources', [])
     else:
         return None
 
 
 def annotate_document(doc, municipality_code):
     # they're sets because we want to keep duplicates away
-    annotations = {
+    municipal_refs = {
         'districts': set(),
-        'annotations': [],
         'neighborhoods': set(),
     }
 
@@ -96,9 +100,17 @@ def annotate_document(doc, municipality_code):
 
     errors = []
     for source in text_fields:
-        clean_text = source.get('description', '').replace('-\n', '')
-        source['description'] = clean_text
-        if not clean_text:
+        field_key = 'description'
+        text = source.get(field_key, '')
+
+        if not text:
+            field_key = 'text'
+            text = source.get(field_key, '')
+
+        clean_text = text.replace('-\n', '')
+        if clean_text:
+            source[field_key] = clean_text
+        else:
             continue
 
         resp = requests.post('https://api.waaroverheid.nl/annotate', json={
@@ -122,14 +134,13 @@ def annotate_document(doc, municipality_code):
             continue
 
         data = resp.json()
-        annotations['districts'].update(data['districts'])
-        annotations['annotations'].extend(data['annotations'])
-        annotations['neighborhoods'].update(data['neighborhoods'])
+        source['annotations'] = data['annotations']
+        municipal_refs['districts'].update(data['districts'])
+        municipal_refs['neighborhoods'].update(data['neighborhoods'])
 
     # convert to lists to make sure we can serialize to JSON
-    doc['_source']['districts'] = sorted(annotations['districts'])
-    doc['_source']['neighborhoods'] = sorted(annotations['neighborhoods'])
-    doc['_source']['annotations'] = annotations['annotations']
+    doc['_source']['districts'] = sorted(municipal_refs['districts'])
+    doc['_source']['neighborhoods'] = sorted(municipal_refs['neighborhoods'])
 
     # write errors to json lines
     with open('log/geocoding_errors_{}.log'.format(municipality_code), 'a') as f:
