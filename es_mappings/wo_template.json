@@ -1,5 +1,5 @@
 {
-    "template": "ori_*",
+    "template": "wo_*",
     "settings": {
         "index": {
             "number_of_shards": 1,
@@ -202,10 +202,41 @@
                         }
                     }
                 },
+                "sources" : {
+                    "properties" : {
+                        "description" : {
+                            "type": "text",
+                            "analyzer": "text_nl"
+                        },
+                        "note" : {
+                            "type": "text",
+                            "analyzer": "text_nl"
+                        },
+                        "url" : {
+                            "type": "keyword",
+                            "index": "false"
+                        },
+                        "annotations": {
+                            "type": "object",
+                            "enabled": "false"
+                        }
+                    }
+                  },
+
                 "combined_index_data": {
                     "type": "text",
                     "index": "false",
                     "doc_values": "false"
+                },
+                "districts": {
+                    "type": "keyword"
+                },
+                "neighborhoods": {
+                    "type": "keyword"
+                },
+                "annotations": {
+                    "type": "object",
+                    "enabled": "false"
                 }
             }
         }
