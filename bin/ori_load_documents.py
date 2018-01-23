@@ -142,10 +142,11 @@ def annotate_document(doc, municipality_code):
     doc['_source']['districts'] = sorted(municipal_refs['districts'])
     doc['_source']['neighborhoods'] = sorted(municipal_refs['neighborhoods'])
 
-    # write errors to json lines
-    with open('log/geocoding_errors_{}.log'.format(municipality_code), 'a') as f:
-        for error_dict in errors:
-            f.write(json.dumps(error_dict) + '\n')
+    if errors:
+        # write errors to json lines
+        with open('log/geocoding_errors_{}.log'.format(municipality_code), 'a') as f:
+            for error_dict in errors:
+                f.write(json.dumps(error_dict) + '\n')
 
     return doc
 
