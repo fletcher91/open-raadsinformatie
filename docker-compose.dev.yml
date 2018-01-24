@@ -4,7 +4,7 @@ services:
     backend:
         build: '.'
         ports:
-            - "81:5555"
+            - "127.0.0.1:81:5555"
         volumes:
             - .:/opt/ori
         command: /opt/ori/bin/backend.sh
@@ -15,12 +15,12 @@ services:
             - ./ocd_frontend:/opt/ori/ocd_frontend
         command: ./manage.py frontend runserver
         ports:
-            - "5000:5000"
+            - "127.0.0.1:5000:5000"
 
     redis:
         image: 'redis'
         ports:
-            - "6379:6379"
+            - "127.0.0.1:6379:6379"
 
     elasticsearch:
         image: "docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION}"
@@ -32,7 +32,7 @@ services:
         volumes:
             - esdata:/usr/share/elasticsearch/data
         ports:
-            - "9200:9200"
+            - "127.0.0.1:9200:9200"
 
 volumes:
     esdata:
