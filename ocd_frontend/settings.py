@@ -48,11 +48,16 @@ EXCLUDED_FIELDS_ALWAYS = [
     'combined_index_data',
     'enrichments',
     'hidden',
-    'organization'
 ]
-EXCLUDED_FIELDS_DEFAULT = ['all_text', 'source_data',
-                           'media_urls.original_url']
-EXCLUDED_FIELDS_SEARCH = ['all_text', 'media_urls.original_url']
+EXCLUDED_FIELDS_DEFAULT = [
+    'all_text',
+    'source_data',
+    'media_urls.original_url',
+]
+EXCLUDED_FIELDS_SEARCH = [
+    'all_text',
+    'media_urls.original_url'
+]
 
 ALLOWED_INCLUDE_FIELDS_DEFAULT = []
 ALLOWED_INCLUDE_FIELDS_SEARCH = []
@@ -290,58 +295,6 @@ AVAILABLE_FACETS = {
         }
     }
 }
-
-
-# AVAILABLE_FACETS = {
-#     # 'retrieved_at': {
-#     #     'date_histogram': {
-#     #         'field': 'retrieved_at',
-#     #         'interval': 'month'
-#     #     }
-#     # },
-#     'rights': {
-#         'terms': {
-#             'field': 'meta.rights',
-#             'size': 10
-#         }
-#     },
-#     'source_id': {
-#         'terms': {
-#             'field': 'meta.source_id',
-#             'size': 10
-#         }
-#     },
-#     'collection': {
-#         'terms': {
-#             'field': 'meta.collection'
-#         }
-#     },
-#     'author': {
-#         'terms': {
-#             'field': 'authors.untouched',
-#             'size': 10
-#         }
-#     },
-#     'date': {
-#         'date_histogram': {
-#             'field': 'date',
-#             'interval': 'month'
-#         }
-#     },
-#     'date_granularity': {
-#         'terms': {
-#             'field': 'date_granularity',
-#             'size': 10
-#         }
-#     },
-#     'media_content_type': {
-#         'terms': {
-#             'field': 'media_urls.content_type',
-#             'size': 10
-#         }
-#     }
-# }
-
 
 # For highlighting
 COMMON_HIGHLIGHTS = {
