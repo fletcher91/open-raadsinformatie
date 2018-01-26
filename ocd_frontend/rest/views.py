@@ -5,6 +5,7 @@ from datetime import datetime
 from hashlib import sha1
 from urlparse import urljoin
 
+from collections import defaultdict
 from elasticsearch import NotFoundError
 from flask import (
     Blueprint, current_app, request, jsonify, redirect, url_for, send_file, )
@@ -177,55 +178,44 @@ def parse_search_request(data, doc_type, mlt=False):
     }
 
 
-def format_search_results(results, doc_type='items'):
-    del results['_shards']
-    del results['timed_out']
-
+def format_search_results(results, cbs_code=None):
+    formatted_results = defaultdict(list)
     for hit in results['hits']['hits']:
-        # del hit['_index']
-        # del hit['_type']
-        # del hit['_source']['hidden']
-        kwargs = {
-            'object_id': hit['_id'],
-            'source_id': hit['_source']['meta']['source_id'],
-            '_external': True
-        }
-        hit['_source']['meta']['ocd_url'] = url_for('api.get_object', **kwargs)
-        for key in current_app.config['EXCLUDED_FIELDS_ALWAYS']:
-            try:
-                del hit['_source'][key]
-            except KeyError as e:
-                pass
+        hit_source = hit['_source']
 
-    formatted_results = {}
-    for hit in results['hits']['hits']:
-        formatted_results.setdefault(hit['_type'], [])
+        # move fields to meta
         for fld in ['_score', '_type', '_index', 'highlight']:
             try:
-                hit['_source']['meta'][fld] = hit[fld]
-            except Exception as e:
+                hit_source['meta'][fld] = hit[fld]
+            except KeyError:
                 pass
-        formatted_results[hit['_type']].append(hit['_source'])
-        del hit['_type']
-        del hit['_index']
 
-    if results.has_key('aggregations'):
+        # replace url with correct host
+        hit_source['meta']['ocd_url'] = url_for(
+            'api.get_object',
+            object_id=hit['_id'],
+            source_id=hit_source['meta']['source_id'],
+            _external=True
+        )
+        # exclude fields
+        for key in current_app.config['EXCLUDED_FIELDS_ALWAYS']:
+            try:
+                del hit_source[key]
+            except KeyError:
+                pass
+
+        formatted_results[hit['_type']].append(hit_source)
+
+    if 'aggregations' in results:
         formatted_results['facets'] = results['aggregations']
-
-        # we need this to keep the API backwards compatible
-        for f_name, f in formatted_results['facets'].iteritems():
-            f['terms'] = []
-            for b in f['buckets']:
-                if ('key' in b) and ('doc_count' in b):
-                    f['terms'].append({
-                        'term': b['key'], 'count': b['doc_count']})
 
     formatted_results['meta'] = {
         'total': results['hits']['total'],
         'took': results['took']
     }
 
-    return formatted_results
+    return dict(formatted_results)
+
 
 def validate_included_fields(include_fields, excluded_fields,
                              allowed_to_include):
@@ -392,7 +382,7 @@ def search(doc_type=u'items'):
             query_time_ms=es_r['took']
         )
 
-    return jsonify(format_search_results(es_r, doc_type))
+    return jsonify(format_search_results(es_r))
 
 
 @bp.route('/<source_id>/search', methods=['POST', 'GET'])
@@ -489,7 +479,7 @@ def search_source(source_id, doc_type=u'items'):
             query_time_ms=es_r['took']
         )
 
-    return jsonify(format_search_results(es_r, doc_type))
+    return jsonify(format_search_results(es_r))
 
 
 @bp.route('/<source_id>/<object_id>', methods=['GET'])
