@@ -2,6 +2,7 @@ import pkgutil
 import importlib
 
 from flask import Blueprint
+from os import path
 
 
 def register_blueprints(app, package_name, package_path):
@@ -23,3 +24,11 @@ def register_blueprints(app, package_name, package_path):
             rv.append(item)
 
     return rv
+
+
+def nltk_data(file_name):
+    return path.join(
+        path.abspath(path.dirname(__file__)),
+        'nltk-data',
+        file_name
+    )
