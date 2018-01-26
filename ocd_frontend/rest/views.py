@@ -13,6 +13,7 @@ from flask import (
 from ocd_frontend import settings
 from ocd_frontend.rest import OcdApiError, decode_json_post_data
 from ocd_frontend.rest import tasks
+from ocd_frontend.rest.snippets import aggregate_toponyms, add_doc_snippets
 
 bp = Blueprint('api', __name__)
 
@@ -166,6 +167,23 @@ def parse_search_request(data, doc_type, mlt=False):
 
     filters.append({"term": {"hidden": "false"}})
 
+    # Find the first CBS code in the filters
+    district_filter = requested_filters.get('districts')
+    neighborhood_filter = requested_filters.get('neighborhoods')
+    area_filter = district_filter or neighborhood_filter
+    if district_filter and neighborhood_filter:
+        raise OcdApiError('Always bring a towel when mixing districts and neighborhoods', 400)
+
+    cbs_code = None
+    if area_filter:
+        try:
+            cbs_code = area_filter['terms'][0]
+            if len(area_filter['terms']) > 1:
+                raise OcdApiError(
+                    'Filtering on multiple areas has not been tested: {}'.format(area_filter['terms']), 400)
+        except (KeyError, IndexError):
+            raise OcdApiError('Area filter is missing terms', 400)
+
     return {
         'query': query,
         'n_size': n_size,
@@ -174,6 +192,7 @@ def parse_search_request(data, doc_type, mlt=False):
         'order': order,
         'facets': facets,
         'filters': filters,
+        'cbs_code': cbs_code,
         'include_fields': include_fields
     }
 
@@ -203,6 +222,12 @@ def format_search_results(results, cbs_code=None):
                 del hit_source[key]
             except KeyError:
                 pass
+
+        # add toponyms
+        hit_source['toponyms'] = aggregate_toponyms(hit_source, cbs_code)
+
+        # add snippets
+        add_doc_snippets(hit_source, cbs_code, compact_sources=True)
 
         formatted_results[hit['_type']].append(hit_source)
 
@@ -314,8 +339,8 @@ def search(doc_type=u'items'):
     # the fields we want to highlight in the Elasticsearch response
     highlighted_fields = current_app.config['COMMON_HIGHLIGHTS']
     highlighted_fields.update(
-        current_app.config['AVAILABLE_HIGHLIGHTS'][doc_type])
-
+        current_app.config['AVAILABLE_HIGHLIGHTS'][doc_type]
+    )
     # Construct the query we are going to send to Elasticsearch
     es_q = {
         'query': {
@@ -324,8 +349,7 @@ def search(doc_type=u'items'):
                     'simple_query_string': {
                         'query': search_req['query'],
                         'default_operator': 'AND',
-                        'fields': current_app.config[
-                            'SIMPLE_QUERY_FIELDS'][doc_type]
+                        'fields': current_app.config['SIMPLE_QUERY_FIELDS'][doc_type]
                     }
                 },
                 'filter': {}
@@ -355,9 +379,11 @@ def search(doc_type=u'items'):
         request_doc_type = doc_type
     else:
         request_doc_type = None
-    es_r = current_app.es.search(body=es_q,
-                                 index=current_app.config['COMBINED_INDEX'],
-                                 doc_type=request_doc_type)
+    es_r = current_app.es.search(
+        body=es_q,
+        index=current_app.config['COMBINED_INDEX'],
+        doc_type=request_doc_type
+    )
 
     # Log a 'search' event if usage logging is enabled
     if current_app.config['USAGE_LOGGING_ENABLED']:
@@ -399,9 +425,10 @@ def search_source(source_id, doc_type=u'items'):
     data = request.data or request.args
     search_req = parse_search_request(data, doc_type)
 
+    exclude_by_default = ['organization'] + current_app.config['EXCLUDED_FIELDS_DEFAULT']
     excluded_fields = validate_included_fields(
         include_fields=search_req['include_fields'],
-        excluded_fields=current_app.config['EXCLUDED_FIELDS_DEFAULT'],
+        excluded_fields=exclude_by_default,
         allowed_to_include=current_app.config['ALLOWED_INCLUDE_FIELDS_DEFAULT']
     )
 
@@ -413,15 +440,7 @@ def search_source(source_id, doc_type=u'items'):
                     'simple_query_string': {
                         'query': search_req['query'],
                         'default_operator': 'AND',
-                        'fields': current_app.config[
-                            'SIMPLE_QUERY_FIELDS'][doc_type]
-                        # 'fields': [
-                        #     'title^3',
-                        #     'authors^2',
-                        #     'description^2',
-                        #     'meta.original_object_id',
-                        #     'all_text'
-                        # ]
+                        'fields': current_app.config['SIMPLE_QUERY_FIELDS'][doc_type]
                     }
                 },
                 'filter': {}
@@ -451,7 +470,10 @@ def search_source(source_id, doc_type=u'items'):
 
     try:
         es_r = current_app.es.search(
-            body=es_q, index=index_name, doc_type=request_doc_type)
+            body=es_q,
+            index=index_name,
+            doc_type=request_doc_type
+        )
     except NotFoundError:
         raise OcdApiError('Source \'%s\' does not exist' % source_id, 404)
 
@@ -479,7 +501,7 @@ def search_source(source_id, doc_type=u'items'):
             query_time_ms=es_r['took']
         )
 
-    return jsonify(format_search_results(es_r))
+    return jsonify(format_search_results(es_r, search_req['cbs_code']))
 
 
 @bp.route('/<source_id>/<object_id>', methods=['GET'])
