@@ -1,0 +1,18 @@
+{
+    "mappings": {
+        "document": {
+            "hidden": {"type": "boolean"},
+            "districts": {"type": "keyword"},
+            "neighborhoods": {"type": "keyword"}
+        },
+
+        "subscription": {
+            "properties": {
+                "email": {"type": "keyword"},
+                "token": {"type": "keyword"},
+                "activated": {"type": "boolean"},
+                "query": {"type": "percolator"}
+            }
+        }
+    }
+}

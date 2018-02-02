@@ -19,3 +19,9 @@ class ElasticsearchService(object):
 
     def msearch(self, *args, **kwargs):
         return self._es.msearch(*args, **kwargs)
+
+    def index(self, *args, **kwargs):
+        return self._es.index(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        return self._es.delete(*args, **kwargs)

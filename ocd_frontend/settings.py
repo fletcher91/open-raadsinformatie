@@ -18,6 +18,9 @@ MAX_SEARCH_SIZE = 100
 # The name of the index containing documents from all sources
 COMBINED_INDEX = 'ori_combined_index'
 
+# the index storing subscriptions
+SUBSCRIPTION_INDEX = 'ori_subscriptions'
+
 # The default prefix used for all data
 DEFAULT_INDEX_PREFIX = 'ori'
 

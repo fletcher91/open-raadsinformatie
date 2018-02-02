@@ -1,13 +1,15 @@
 import copy
 import glob
 import os
+import uuid
 from datetime import datetime
 from hashlib import sha1
 from urlparse import urljoin
 
 from elasticsearch import NotFoundError
 from flask import (
-    Blueprint, current_app, request, jsonify, redirect, url_for, send_file, )
+    Blueprint, current_app, request, jsonify, redirect, url_for, send_file,
+    render_template)
 
 from ocd_frontend import settings
 from ocd_frontend.rest import OcdApiError, decode_json_post_data
@@ -263,6 +265,53 @@ def format_sources_results(results):
     }
 
 
+def construct_es_query(search_req, doc_type):
+    excluded_fields = validate_included_fields(
+        include_fields=search_req['include_fields'],
+        excluded_fields=current_app.config['EXCLUDED_FIELDS_SEARCH'],
+        allowed_to_include=current_app.config['ALLOWED_INCLUDE_FIELDS_SEARCH']
+    )
+    # the fields we want to highlight in the Elasticsearch response
+    highlighted_fields = current_app.config['COMMON_HIGHLIGHTS']
+    highlighted_fields.update(
+        current_app.config['AVAILABLE_HIGHLIGHTS'][doc_type])
+
+    # Construct the query we are going to send to Elasticsearch
+    es_q = {
+        'query': {
+            'bool': {
+                'must': {
+                    'simple_query_string': {
+                        'query': search_req['query'],
+                        'default_operator': 'AND',
+                        'fields': current_app.config[
+                            'SIMPLE_QUERY_FIELDS'][doc_type]
+                    }
+                },
+                'filter': {}
+            }
+        },
+        'aggregations': search_req['facets'],
+        'size': search_req['n_size'],
+        'from': search_req['n_from'],
+        'sort': {
+            search_req['sort']: {'order': search_req['order']}
+        },
+        '_source': {
+            'excludes': excluded_fields
+        },
+        'highlight': {
+            'fields': highlighted_fields
+        }
+    }
+    if not search_req['query']:
+        es_q['query']['bool']['must'] = {'match_all': {}}
+
+    if search_req['filters']:
+        es_q['query']['bool']['filter'] = search_req['filters']
+    return es_q
+
+
 # Retrieve the indices/sources and the total number of documents per
 # type (counting only documents which are not hidden!)
 @bp.route('/sources', methods=['GET'])
@@ -315,51 +364,7 @@ def search(doc_type=u'items'):
     data = request.data or request.args
     search_req = parse_search_request(data, doc_type)
 
-    excluded_fields = validate_included_fields(
-        include_fields=search_req['include_fields'],
-        excluded_fields=current_app.config['EXCLUDED_FIELDS_SEARCH'],
-        allowed_to_include=current_app.config['ALLOWED_INCLUDE_FIELDS_SEARCH']
-    )
-
-    # the fields we want to highlight in the Elasticsearch response
-    highlighted_fields = current_app.config['COMMON_HIGHLIGHTS']
-    highlighted_fields.update(
-        current_app.config['AVAILABLE_HIGHLIGHTS'][doc_type])
-
-    # Construct the query we are going to send to Elasticsearch
-    es_q = {
-        'query': {
-            'bool': {
-                'must': {
-                    'simple_query_string': {
-                        'query': search_req['query'],
-                        'default_operator': 'AND',
-                        'fields': current_app.config[
-                            'SIMPLE_QUERY_FIELDS'][doc_type]
-                    }
-                },
-                'filter': {}
-            }
-        },
-        'aggregations': search_req['facets'],
-        'size': search_req['n_size'],
-        'from': search_req['n_from'],
-        'sort': {
-            search_req['sort']: {'order': search_req['order']}
-        },
-        '_source': {
-            'excludes': excluded_fields
-        },
-        'highlight': {
-            'fields': highlighted_fields
-        }
-    }
-
-    if not search_req['query']:
-        es_q['query']['bool']['must'] = {'match_all': {}}
-
-    if search_req['filters']:
-        es_q['query']['bool']['filter'] = search_req['filters']
+    es_q = construct_es_query(search_req, doc_type)
 
     if doc_type != settings.DOC_TYPE_DEFAULT:
         request_doc_type = doc_type
@@ -393,6 +398,57 @@ def search(doc_type=u'items'):
         )
 
     return jsonify(format_search_results(es_r, doc_type))
+
+
+@bp.route('/subscription', methods=['POST'])
+@decode_json_post_data
+def subscribe_search():
+    data = request.data or request.args
+    search_req = parse_search_request(data['query'], u'items')
+    es_query = construct_es_query(search_req, u'items')
+    token = uuid.uuid4()
+
+    current_app.es.index(
+        index=current_app.config['SUBSCRIPTION_INDEX'],
+        doc_type=u'subscription',
+        id=token,
+        body={
+            'email': data['email'],
+            'token': token,
+            'activated': False,
+            'query': es_query['query'],
+        },
+    )
+    return '', 201
+
+
+@bp.route('/subscription/<token>/activate', methods=['GET'])
+def activate_subscription(token):
+    result = current_app.es.get(
+        id=token, index=current_app.config['SUBSCRIPTION_INDEX'],
+        doc_type=u'subscription'
+    )
+    if not result['found']:
+        raise OcdApiError('token not found', 404)
+    subscription = result['_source']
+    subscription['activated'] = True
+    current_app.es.index(
+        index=current_app.config['SUBSCRIPTION_INDEX'],
+        doc_type=u'subscription', id=token, body=subscription)
+    return render_template('activate_subscription.html')
+
+
+@bp.route('/subscription/<token>/delete', methods=['GET', 'POST'])
+def delete_subscription(token):
+    if request.method == "POST":
+        try:
+            current_app.es.delete(
+                doc_type=u'subscription', id=token,
+                index=current_app.config['SUBSCRIPTION_INDEX'],
+            )
+        except Exception:
+            return 'Subscription not found', 404
+    return render_template('delete_subscription.html')
 
 
 @bp.route('/<source_id>/search', methods=['POST', 'GET'])

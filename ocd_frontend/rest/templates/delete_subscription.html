@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% if request.method == "GET" %}
+    <p>Are you sure you want to delete this subscription?</p>
+
+    <form action="" method="POST">
+      <button type="submit">Confirm</button>
+    </form>
+  {% elif request.method == "POST" %}
+    <p>Your subscription has been deleted. You will no longer receive updates for this query.</p>
+  {% endif %}
+{% endblock content %}
