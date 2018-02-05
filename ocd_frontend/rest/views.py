@@ -12,6 +12,7 @@ from flask import (
     render_template)
 
 from ocd_frontend import settings
+from ocd_frontend import mail
 from ocd_frontend.rest import OcdApiError, decode_json_post_data
 from ocd_frontend.rest import tasks
 
@@ -418,6 +419,11 @@ def subscribe_search():
             'activated': False,
             'query': es_query['query'],
         },
+    )
+
+    mail.send(
+        data['email'], 'Activate your WaarOverheid subscription',
+        render_template('activate_email.txt', token=token)
     )
     return '', 201
 

@@ -1,0 +1,5 @@
+Hello,
+
+You have requested to be notified of new documents in a WaarOverheid search. Click the link below to activate your subscription:
+
+https://waaroverheid.github.io/subscription/{{ token }}/activate
