@@ -20,12 +20,14 @@ args = parser.parse_args()
 
 
 ES_HOST = 'localhost'
-ES_PORT = 9200
+ES_SOURCE_PORT = 9797
+ES_SINK_PORT = 9200
 
-es = Elasticsearch([{'host': ES_HOST, 'port': ES_PORT}])
+es_source = Elasticsearch([{'host': ES_HOST, 'port': ES_SOURCE_PORT}])
+es_sink = Elasticsearch([{'host': ES_HOST, 'port': ES_SINK_PORT}])
 
 # input validation
-if not es.indices.exists(index=args.source_collection):
+if not es_source.indices.exists(index=args.source_collection):
     print('Source collection {} cannot be found'.format(args.source_collection))
 
 mun_code_re_str = r'GM\d{4}$'
@@ -36,11 +38,11 @@ if not re.match(mun_code_re_str, args.municipality_code):
 def geocode_collection(source_index, municipality_code):
     waaroverheid_index = 'wo_{}'.format(municipality_code.lower())
     print('Geocoding {} into {}'.format(source_index, waaroverheid_index))
-    total_count = es.count(index=source_index)['count']
+    total_count = es_source.count(index=source_index)['count']
 
     chunk_size = 25
     items = scan(
-        es,
+        es_source,
         query=None,
         index=source_index,
         scroll='10m',
@@ -65,11 +67,11 @@ def geocode_collection(source_index, municipality_code):
             annotated_item = annotate_document(item, municipality_code)
             new_items.append(annotated_item)
             if len(new_items) >= chunk_size:
-                bulk(es, new_items, chunk_size=chunk_size, request_timeout=120)
+                bulk(es_sink, new_items, chunk_size=chunk_size, request_timeout=120)
                 progress_bar.update(chunk_size)
                 new_items = []
 
-        bulk(es, new_items, chunk_size=chunk_size, request_timeout=120)
+        bulk(es_sink, new_items, chunk_size=chunk_size, request_timeout=120)
         progress_bar.update(len(new_items))
 
 
