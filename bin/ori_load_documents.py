@@ -72,8 +72,8 @@ def load_bucket(source_index, municipality_code, latest_date, bucket):
                 'filter': {
                     'range': {
                         'meta.processing_started': {
-                            'gte': date_from,
-                            'lt': date_till
+                            'gt': date_from,
+                            'lte': date_till
                         }
                     }
                 }
@@ -269,7 +269,7 @@ def get_date_aggregations(es_connection, alias, date_from=None):
         es_query['query']['bool']['filter'] = {
             'range': {
                 'meta.processing_started': {
-                    'gte': date_from
+                    'gt': date_from
                 }
             }
         }
