@@ -321,4 +321,5 @@ if __name__ == '__main__':
     else:
         print('Loading all available collections...')
         ori_collections = get_available_collections()
-        print(ori_collections)
+        for cbs_code, ori_props in sorted(ori_collections.iteritems()):
+            geocode_collection(ori_props['ori_alias'], cbs_code)
