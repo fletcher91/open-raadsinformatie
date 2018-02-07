@@ -8,7 +8,7 @@ import re
 from datetime import datetime
 
 import requests
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch, NotFoundError
 from elasticsearch.helpers import scan, bulk
 from pygtrie import CharTrie
 from tqdm import tqdm
@@ -42,7 +42,10 @@ def geocode_collection(source_index, municipality_code):
     print('\nGeocoding {} for municipality {}'.format(source_index, municipality_code))
     waaroverheid_index = 'wo_{}'.format(municipality_code.lower())
     source_count = es_source.count(index=source_index)['count']
-    sink_count = es_sink.count(index=waaroverheid_index)['count']
+    try:
+        sink_count = es_sink.count(index=waaroverheid_index)['count']
+    except NotFoundError:
+        sink_count = 0
 
     if source_count > sink_count:
         latest_date, buckets = get_incomplete_buckets(source_index, waaroverheid_index)
