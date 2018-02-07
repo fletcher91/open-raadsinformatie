@@ -10,12 +10,23 @@ from datetime import datetime
 import requests
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan, bulk
+from pygtrie import CharTrie
 from tqdm import tqdm
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('source_collection', help='The ES index used as data source')
-parser.add_argument('municipality_code', help='CBS municipality code "GM\d\d\d\d"')
+parser.add_argument(
+    'source_collection',
+    default=None,
+    nargs='?',
+    help='The ES index used as data source'
+)
+parser.add_argument(
+    'municipality_code',
+    default=None,
+    nargs='?',
+    help='CBS municipality code "GM\d\d\d\d"'
+)
 args = parser.parse_args()
 
 
@@ -25,14 +36,6 @@ ES_SINK_PORT = 9200
 
 es_source = Elasticsearch([{'host': ES_HOST, 'port': ES_SOURCE_PORT}])
 es_sink = Elasticsearch([{'host': ES_HOST, 'port': ES_SINK_PORT}])
-
-# input validation
-if not es_source.indices.exists(index=args.source_collection):
-    print('Source collection {} cannot be found'.format(args.source_collection))
-
-mun_code_re_str = r'GM\d{4}$'
-if not re.match(mun_code_re_str, args.municipality_code):
-    print('Municipality code must match the regex r"{}"'.format(mun_code_re_str))
 
 
 def geocode_collection(source_index, municipality_code):
@@ -153,5 +156,59 @@ def annotate_document(doc, municipality_code):
     return doc
 
 
+def get_available_collections():
+    aliases_by_index = es_source.indices.get_alias(name='ori_*')
+    aliases_by_collection = CharTrie({
+        alias[4:]: alias
+        for props in aliases_by_index.values()
+        for alias in props['aliases']
+    })
+
+    def get_alias(collection):
+        if aliases_by_collection.has_subtrie(collection + '_'):
+            return u'ori_{}_*'.format(collection)
+        else:
+            return aliases_by_collection.get(collection)
+
+    ori_base_url = 'http://api.openraadsinformatie.nl/v0/'
+    resp = requests.post(ori_base_url + 'search/organizations', json={
+        'filters': {
+            'classification': {
+                'terms': ['Municipality']
+            }
+        },
+        'size': 100
+    })
+    data = resp.json()
+    if data['meta']['total'] > 100:
+        print('WARNING: only loading 100/{} municipalities'.format(data['meta']['total']))
+
+    available_collections = {
+        next(
+            ref['identifier']
+            for ref in org['identifiers']
+            if ref['scheme'] == 'CBS'
+        ): {
+            'ori_name': org['name'],
+            'ori_alias': get_alias(org['meta']['collection'])
+        }
+        for org in data['organizations']
+    }
+    return available_collections
+
+
 if __name__ == '__main__':
-    geocode_collection(args.source_collection, args.municipality_code)
+    # input validation
+    if args.source_collection and args.municipality_code:
+        if not es_source.indices.exists(index=args.source_collection):
+            print('Source collection {} cannot be found'.format(args.source_collection))
+
+        mun_code_re_str = r'GM\d{4}$'
+        if not re.match(mun_code_re_str, args.municipality_code):
+            print('Municipality code must match the regex r"{}"'.format(mun_code_re_str))
+
+        geocode_collection(args.source_collection, args.municipality_code)
+    else:
+        print('Loading all available collections...')
+        ori_collections = get_available_collections()
+        print(ori_collections)
