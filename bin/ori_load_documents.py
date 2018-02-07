@@ -39,22 +39,61 @@ es_sink = Elasticsearch([{'host': ES_HOST, 'port': ES_SINK_PORT}])
 
 
 def geocode_collection(source_index, municipality_code):
+    print('\nGeocoding {} for municipality {}'.format(source_index, municipality_code))
     waaroverheid_index = 'wo_{}'.format(municipality_code.lower())
-    print('Geocoding {} into {}'.format(source_index, waaroverheid_index))
-    total_count = es_source.count(index=source_index)['count']
+    source_count = es_source.count(index=source_index)['count']
+    sink_count = es_sink.count(index=waaroverheid_index)['count']
+
+    if source_count > sink_count:
+        latest_date, buckets = get_incomplete_buckets(source_index, waaroverheid_index)
+        for bucket in buckets:
+            load_bucket(source_index, municipality_code, latest_date, bucket)
+    else:
+        print('Skipping: source {} docs, sink {} docs'.format(source_count, sink_count))
+
+
+def load_bucket(source_index, municipality_code, latest_date, bucket):
+    waaroverheid_index = 'wo_{}'.format(municipality_code.lower())
+
+    date_from = bucket['key_as_string']
+    if latest_date and latest_date['value'] > bucket['key']:
+        date_from = latest_date['value_as_string']
+
+    date_till = bucket['key_as_string'] + '||+1w'
+    print('{} from {} till {}'.format(source_index, date_from, date_till))
+
+    es_query = {
+        'query': {
+            'bool': {
+                'must': {'match_all': {}},
+                'filter': {
+                    'range': {
+                        'meta.processing_started': {
+                            'gte': date_from,
+                            'lt': date_till
+                        }
+                    }
+                }
+            }
+        },
+        'sort': [
+            {'meta.processing_started': {'order': 'asc'}},
+        ]
+    }
 
     chunk_size = 25
     items = scan(
         es_source,
-        query=None,
+        query=es_query,
         index=source_index,
         scroll='10m',
         size=chunk_size,
+        preserve_order=True,
         raise_on_error=False,
     )
 
     new_items = []
-    with tqdm(total=total_count) as progress_bar:
+    with tqdm(total=bucket['doc_count']) as progress_bar:
         for item in items:
             item['_index'] = waaroverheid_index
             del item['_score']
@@ -195,6 +234,74 @@ def get_available_collections():
         for org in data['organizations']
     }
     return available_collections
+
+
+def get_date_aggregations(es_connection, alias, date_from=None):
+    if not es_connection.indices.exists(index=alias):
+        return None, None
+
+    es_query = {
+        'aggs': {
+            'by_processing_date': {
+                'date_histogram': {
+                    'field': 'meta.processing_started',
+                    'interval': 'week'
+                }
+            },
+            'latest_date': {
+                'max': {
+                    'field': 'meta.processing_started',
+                }
+            },
+        },
+        'query': {
+            'bool': {
+                'must': {'match_all': {}},
+                'filter': {}
+            }
+        },
+        'size': 0
+    }
+    if date_from:
+        es_query['query']['bool']['filter'] = {
+            'range': {
+                'meta.processing_started': {
+                    'gte': date_from
+                }
+            }
+        }
+    resp = es_connection.search(index=alias, body=es_query)
+
+    return (
+        resp['aggregations']['latest_date'],
+        resp['aggregations']['by_processing_date']['buckets']
+    )
+
+
+def get_incomplete_buckets(ori_alias, waaroverheid_index):
+    latest_sink_date, sink_buckets = get_date_aggregations(es_sink, waaroverheid_index)
+    if not latest_sink_date:
+        return None, get_date_aggregations(es_source, ori_alias)[1]
+
+    _, source_buckets = get_date_aggregations(
+        es_source, ori_alias, date_from=latest_sink_date['value_as_string']
+    )
+    sink_by_week = {
+        week['key']: week
+        for week in sink_buckets
+    }
+    incomplete_weeks = []
+    for week in source_buckets:
+        sink_count = 0
+        try:
+            sink_count = sink_by_week[week['key']]['doc_count']
+        except KeyError:
+            pass
+
+        if week['doc_count'] > sink_count:
+            incomplete_weeks.append(week)
+
+    return latest_sink_date, incomplete_weeks
 
 
 if __name__ == '__main__':
