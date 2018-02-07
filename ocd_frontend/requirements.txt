@@ -1,6 +1,6 @@
 Flask~=0.12
 Pillow
-celery[redis]~=4.2
+celery[redis]~=4.1
 elasticsearch~=5.2
 intervaltree~=2.1
 nltk~=3.2
