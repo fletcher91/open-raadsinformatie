@@ -6,3 +6,4 @@ intervaltree~=2.1
 nltk~=3.2
 pygtrie~=2.2
 requests~=2.18
+sendgrid~=5.3
