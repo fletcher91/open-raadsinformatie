@@ -2,6 +2,10 @@ import os.path
 
 DEBUG = True
 
+# Sendgrid settings
+SENDGRID_API_KEY = 'apikey'
+SENDGRID_FROM_ADDRESS = 'no-reply@waaroverheid.nl'
+
 # Celery settings
 CELERY_BROKER_URL = 'redis://redis:6379/1'
 

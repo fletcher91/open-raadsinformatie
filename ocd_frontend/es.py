@@ -1,4 +1,8 @@
 from elasticsearch import Elasticsearch
+from flask import render_template
+
+from ocd_frontend import mail
+from ocd_frontend import settings
 
 
 class ElasticsearchService(object):
@@ -25,3 +29,35 @@ class ElasticsearchService(object):
 
     def delete(self, *args, **kwargs):
         return self._es.delete(*args, **kwargs)
+
+
+def percolate_documents(documents):
+    es = ElasticsearchService(
+        settings.ELASTICSEARCH_HOST, settings.ELASTICSEARCH_PORT)
+    result = es.search(index='ori_subscriptions', body={
+        "query": {
+            "constant_score": {
+                "filter": {
+                    "percolate": {
+                        "field": "query",
+                        "documents": documents,
+                    }
+                }
+            }
+        }
+    })
+
+    for hit in result['hits']['hits']:
+        subscription = hit['_source']
+        document_indexes = hit['fields']['_percolator_document_slot']
+
+        matched_documents = [documents[x] for x in document_indexes]
+
+        mail.send(
+            subscription['email'],
+            'New documents match your stored search',
+            render_template(
+                'subscription_documents.txt',
+                token=subscription['token'],
+                docs=matched_documents)
+        )
