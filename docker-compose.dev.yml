@@ -1,19 +1,12 @@
 version: "2.1"
 
 services:
-    backend:
-        build: '.'
-        ports:
-            - "127.0.0.1:81:5555"
-        volumes:
-            - .:/opt/ori
-        command: /opt/ori/bin/backend.sh
 
     frontend:
-        build: '.'
+        build: 'ocd_frontend'
         volumes:
             - ./ocd_frontend:/opt/ori/ocd_frontend
-        command: ./manage.py frontend runserver
+        command: python wsgi.py
         ports:
             - "127.0.0.1:5000:5000"
 
