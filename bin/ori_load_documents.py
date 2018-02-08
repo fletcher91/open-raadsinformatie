@@ -34,7 +34,7 @@ ES_HOST = 'localhost'
 ES_SOURCE_PORT = 9797
 ES_SINK_PORT = 9200
 
-es_source = Elasticsearch([{'host': ES_HOST, 'port': ES_SOURCE_PORT}])
+es_source = Elasticsearch([{'host': ES_HOST, 'port': ES_SOURCE_PORT}], timeout=30)
 es_sink = Elasticsearch([{'host': ES_HOST, 'port': ES_SINK_PORT}])
 
 
