@@ -57,6 +57,9 @@ local_dumps/
 # logs
 *.log
 
+# pyenv
+.python-version
+
 dumps/*
 data/*
 local_dumps/*

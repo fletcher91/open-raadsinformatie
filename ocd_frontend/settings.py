@@ -26,7 +26,7 @@ COMBINED_INDEX = 'ori_combined_index'
 SUBSCRIPTION_INDEX = 'ori_subscriptions'
 
 # The default prefix used for all data
-DEFAULT_INDEX_PREFIX = 'ori'
+DEFAULT_INDEX_PREFIX = 'wo'
 
 # The fields which can be used for sorting results via the REST API
 SORTABLE_FIELDS = {
@@ -36,11 +36,11 @@ SORTABLE_FIELDS = {
     'organizations': [
         'meta.source_id', 'meta.processing_started', 'meta.processing_finished',
         'start_date', '_score', 'classification', 'name'],
-    'events' :[
+    'events' : [
         'meta.source_id', 'meta.processing_started', 'meta.processing_finished',
         'start_date', '_score', 'classification', 'name', 'start_date',
         'location'],
-    'motions':[
+    'motions': [
         'meta.source_id', 'meta.processing_started', 'meta.processing_finished',
         'start_date', '_score', 'classification', 'name', 'date'],
     'vote_events': [
@@ -51,19 +51,20 @@ SORTABLE_FIELDS = {
         'start_date', '_score']
 }
 
-# EXCLUDED_FIELDS_DEFAULT = ['all_text', 'source_data',
-#                            'media_urls.original_url',
-#                            'combined_index_data']
-# EXCLUDED_FIELDS_SEARCH = ['all_text', 'media_urls.original_url']
-#
-# ALLOWED_INCLUDE_FIELDS_DEFAULT = ['all_text', 'source_data']
-# ALLOWED_INCLUDE_FIELDS_SEARCH = ['all_text']
-
 EXCLUDED_FIELDS_ALWAYS = [
-    'combined_index_data', 'enrichments', 'hidden']
-EXCLUDED_FIELDS_DEFAULT = ['all_text', 'source_data',
-                           'media_urls.original_url']
-EXCLUDED_FIELDS_SEARCH = ['all_text', 'media_urls.original_url']
+    'combined_index_data',
+    'enrichments',
+    'hidden',
+]
+EXCLUDED_FIELDS_DEFAULT = [
+    'all_text',
+    'source_data',
+    'media_urls.original_url',
+]
+EXCLUDED_FIELDS_SEARCH = [
+    'all_text',
+    'media_urls.original_url'
+]
 
 ALLOWED_INCLUDE_FIELDS_DEFAULT = []
 ALLOWED_INCLUDE_FIELDS_SEARCH = []
@@ -301,58 +302,6 @@ AVAILABLE_FACETS = {
         }
     }
 }
-
-
-# AVAILABLE_FACETS = {
-#     # 'retrieved_at': {
-#     #     'date_histogram': {
-#     #         'field': 'retrieved_at',
-#     #         'interval': 'month'
-#     #     }
-#     # },
-#     'rights': {
-#         'terms': {
-#             'field': 'meta.rights',
-#             'size': 10
-#         }
-#     },
-#     'source_id': {
-#         'terms': {
-#             'field': 'meta.source_id',
-#             'size': 10
-#         }
-#     },
-#     'collection': {
-#         'terms': {
-#             'field': 'meta.collection'
-#         }
-#     },
-#     'author': {
-#         'terms': {
-#             'field': 'authors.untouched',
-#             'size': 10
-#         }
-#     },
-#     'date': {
-#         'date_histogram': {
-#             'field': 'date',
-#             'interval': 'month'
-#         }
-#     },
-#     'date_granularity': {
-#         'terms': {
-#             'field': 'date_granularity',
-#             'size': 10
-#         }
-#     },
-#     'media_content_type': {
-#         'terms': {
-#             'field': 'media_urls.content_type',
-#             'size': 10
-#         }
-#     }
-# }
-
 
 # For highlighting
 COMMON_HIGHLIGHTS = {
