@@ -323,5 +323,5 @@ if __name__ == '__main__':
         ori_collections = get_available_collections()
         for i, code__props in enumerate(sorted(ori_collections.iteritems())):
             cbs_code, ori_props = code__props
-            print('\n' * 5 + '{}/{} -- {}'.format(i, len(ori_collections), ori_props['ori_name']))
+            print('\n' * 5 + u'{}/{} -- {}'.format(i, len(ori_collections), ori_props['ori_name']))
             geocode_collection(ori_props['ori_alias'], cbs_code)
