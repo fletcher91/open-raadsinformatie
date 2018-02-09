@@ -5,6 +5,8 @@ from intervaltree import IntervalTree, Interval
 
 from ocd_frontend.helpers import nltk_data
 
+CONTEXT_LENGTH = 70
+
 
 def generate_geo_snippets(text, annotations):
     tokenizer = nltk.data.load('file:{}'.format(nltk_data('nl_punkt.pickle')))
@@ -32,18 +34,36 @@ def generate_geo_snippets(text, annotations):
     return snippets, by_code
 
 
-def highlight_snippet(raw_snippet, postings):
+def slice_at_space(snippet_part, target_length, direction=1):
+    part = snippet_part[::direction]
+    shift = part[target_length:].find(' ')
+    if shift is -1 and len(part) < 2 * CONTEXT_LENGTH:
+        return snippet_part
+
+    return part[:target_length + shift + max(0, direction)][::direction]
+
+
+def format_snippet(raw_snippet, postings):
     h_snippet = u''
     cursor = 0
     for begin, end in postings:
         if begin >= cursor:
-            h_snippet += raw_snippet[cursor:begin]
+            non_topo = raw_snippet[cursor:begin]
+            if cursor and len(non_topo) > 2 * CONTEXT_LENGTH:
+                non_topo = u'{} \u2026 {}'.format(
+                    slice_at_space(non_topo, CONTEXT_LENGTH),
+                    slice_at_space(non_topo, CONTEXT_LENGTH, -1)
+                )
+            elif len(non_topo) > CONTEXT_LENGTH:
+                non_topo = slice_at_space(non_topo, CONTEXT_LENGTH, -1)
+
+            h_snippet += non_topo
             h_snippet += u'<em class="c-details--toponym">{}</em>'.format(
                 raw_snippet[begin:end]
             )
             cursor = end
 
-    h_snippet += raw_snippet[cursor:]
+    h_snippet += slice_at_space(raw_snippet[cursor:], CONTEXT_LENGTH)
     return h_snippet
 
 
@@ -55,7 +75,7 @@ def get_filtered_snippets(text, annotations, cbs_code=None):
 
     if cbs_code:
         snippets = [
-            highlight_snippet(snippets[i], postings)
+            format_snippet(snippets[i], postings)
             for i, postings in sorted(by_code[cbs_code].iteritems())
         ]
 
