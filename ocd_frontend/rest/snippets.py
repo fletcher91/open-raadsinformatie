@@ -23,11 +23,13 @@ def generate_geo_snippets(text, annotations):
             h_snippet = u''
             cursor = span[0]
             for iv in sorted(intervals):
-                h_snippet += text[cursor:iv.begin]
-                h_snippet += u'<em class="c-details--toponym">{}</em>'.format(
-                    text[iv.begin:iv.end]
-                )
-                cursor = iv.end
+                if iv.begin >= cursor:
+                    h_snippet += text[cursor:iv.begin]
+                    h_snippet += u'<em class="c-details--toponym">{}</em>'.format(
+                        text[iv.begin:iv.end]
+                    )
+                    cursor = iv.end
+
                 for code in iv.data:
                     by_code[code].add(snippet_index)
 
