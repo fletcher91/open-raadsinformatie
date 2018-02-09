@@ -14,31 +14,37 @@ def generate_geo_snippets(text, annotations):
         for posting in ann['postings']
     )
     snippets = []
-    by_code = defaultdict(set)
+    by_code = defaultdict(lambda: defaultdict(list))
     for span in tokenizer.span_tokenize(text):
         intervals = tree[slice(*span)]
         if intervals:
             # sentence overlaps with at least one posting
             snippet_index = len(snippets)
-            h_snippet = u''
-            cursor = span[0]
             for iv in sorted(intervals):
-                if iv.begin >= cursor:
-                    h_snippet += text[cursor:iv.begin]
-                    h_snippet += u'<em class="c-details--toponym">{}</em>'.format(
-                        text[iv.begin:iv.end]
-                    )
-                    cursor = iv.end
-
                 for code in iv.data:
-                    by_code[code].add(snippet_index)
+                    by_code[code][snippet_index].append(
+                        (iv.begin - span[0], iv.end - span[0])
+                    )
 
-            h_snippet += text[cursor:span[1]]
-            snippets.append(
-                h_snippet.replace('\n', ' ')
-            )
+            raw_snippet = text[slice(*span)].replace('\n', ' ')
+            snippets.append(raw_snippet)
 
     return snippets, by_code
+
+
+def highlight_snippet(raw_snippet, postings):
+    h_snippet = u''
+    cursor = 0
+    for begin, end in postings:
+        if begin >= cursor:
+            h_snippet += raw_snippet[cursor:begin]
+            h_snippet += u'<em class="c-details--toponym">{}</em>'.format(
+                raw_snippet[begin:end]
+            )
+            cursor = end
+
+    h_snippet += raw_snippet[cursor:]
+    return h_snippet
 
 
 def get_filtered_snippets(text, annotations, cbs_code=None):
@@ -49,8 +55,8 @@ def get_filtered_snippets(text, annotations, cbs_code=None):
 
     if cbs_code:
         snippets = [
-            snippets[i]
-            for i in sorted(by_code[cbs_code])
+            highlight_snippet(snippets[i], postings)
+            for i, postings in sorted(by_code[cbs_code].iteritems())
         ]
 
     return snippets
