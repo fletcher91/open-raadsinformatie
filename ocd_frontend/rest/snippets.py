@@ -20,12 +20,20 @@ def generate_geo_snippets(text, annotations):
         if intervals:
             # sentence overlaps with at least one posting
             snippet_index = len(snippets)
-            for iv in intervals:
+            h_snippet = ''
+            cursor = span[0]
+            for iv in sorted(intervals):
+                h_snippet += text[cursor:iv.begin]
+                h_snippet += '<em class="c-details--toponym">{}</em>'.format(
+                    text[iv.begin:iv.end]
+                )
+                cursor = iv.end
                 for code in iv.data:
                     by_code[code].add(snippet_index)
 
+            h_snippet += text[cursor:span[1]]
             snippets.append(
-                text[slice(*span)].replace('\n', ' ')
+                h_snippet.replace('\n', ' ')
             )
 
     return snippets, by_code
