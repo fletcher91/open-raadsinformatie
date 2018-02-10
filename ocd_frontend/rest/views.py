@@ -16,7 +16,7 @@ from ocd_frontend import settings
 from ocd_frontend import mail
 from ocd_frontend.rest import OcdApiError, decode_json_post_data
 from ocd_frontend.rest import tasks
-from ocd_frontend.rest.snippets import aggregate_toponyms, add_doc_snippets
+from ocd_frontend.rest.snippets import aggregate_toponyms, filter_doc_snippets
 
 bp = Blueprint('api', __name__)
 
@@ -226,11 +226,11 @@ def format_search_results(results, cbs_code=None):
             except KeyError:
                 pass
 
-        # add toponyms
+        # add toponyms for the selected area
         hit_source['toponyms'] = aggregate_toponyms(hit_source, cbs_code)
 
-        # add snippets
-        add_doc_snippets(hit_source, cbs_code, compact_sources=True)
+        # filter snippets for the selected area
+        filter_doc_snippets(hit_source, cbs_code)
 
         formatted_results[hit['_type']].append(hit_source)
 

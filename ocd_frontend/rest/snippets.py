@@ -67,34 +67,62 @@ def format_snippet(raw_snippet, postings):
     return h_snippet
 
 
-def get_filtered_snippets(text, annotations, cbs_code=None):
-    if not annotations or not text:
+def get_filtered_snippets(snippets, by_code, cbs_code=None):
+    if not snippets:
         return []
 
-    snippets, by_code = generate_geo_snippets(text, annotations)
-
     if cbs_code:
-        snippets = [
-            format_snippet(snippets[i], postings)
-            for i, postings in sorted(by_code[cbs_code].iteritems())
+        code_postings = sorted(by_code[cbs_code].iteritems())
+    else:
+        code_postings = defaultdict(set)
+        for snippet_postings in by_code.itervalues():
+            for i, postings in snippet_postings:
+                code_postings[i].update(postings)
+        code_postings = [
+            (i, sorted(postings))
+            for i, postings in sorted(code_postings.iteritems())
         ]
+
+    snippets = [
+        format_snippet(snippets[i], postings)
+        for i, postings in code_postings
+    ]
 
     return snippets
 
 
-def add_doc_snippets(doc_source, cbs_code=None, compact_sources=False):
+def add_doc_snippets(doc_source):
     if doc_source.get('annotations'):
-        doc_source['snippets'] = get_filtered_snippets(
+        snippets, by_code = generate_geo_snippets(
             doc_source['description'],
-            doc_source['annotations'],
+            doc_source['annotations']
+        )
+        doc_source['snippets'] = snippets
+        doc_source['snippets_by_code'] = by_code
+
+    for source in doc_source.get('sources', []):
+        if source.get('annotations'):
+            snippets, by_code = generate_geo_snippets(
+                source['description'],
+                source['annotations']
+            )
+            source['snippets'] = snippets
+            source['snippets_by_code'] = by_code
+
+
+def filter_doc_snippets(doc_source, cbs_code=None, compact_sources=False):
+    if doc_source.get('snippets'):
+        doc_source['snippets'] = get_filtered_snippets(
+            doc_source['snippets'],
+            doc_source['snippets_by_code'],
             cbs_code
         )
 
     for source in doc_source.get('sources', []):
-        if source.get('annotations'):
+        if source.get('snippets'):
             source['snippets'] = get_filtered_snippets(
-                source['description'],
-                source['annotations'],
+                source['snippets'],
+                source['snippets_by_code'],
                 cbs_code
             )
 
