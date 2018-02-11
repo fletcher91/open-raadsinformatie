@@ -4,14 +4,26 @@ from __future__ import print_function, unicode_literals
 
 import argparse
 import json
+import os
 import re
+import requests
+import sys
 from datetime import datetime
 
-import requests
 from elasticsearch import Elasticsearch, NotFoundError
 from elasticsearch.helpers import scan, bulk
 from pygtrie import CharTrie
 from tqdm import tqdm
+
+from ocd_frontend.rest.snippets import add_doc_snippets
+
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.abspath(__file__)
+    )
+)
+FRONTEND_PATH = os.path.join(BASE_DIR, 'ocd_frontend')
+sys.path.insert(0, os.path.abspath(FRONTEND_PATH))
 
 
 parser = argparse.ArgumentParser()
@@ -110,6 +122,8 @@ def load_bucket(source_index, municipality_code, latest_date, bucket):
                 }
 
             annotated_item = annotate_document(item, municipality_code)
+            add_doc_snippets(annotated_item['_source'])
+
             new_items.append(annotated_item)
             if len(new_items) >= chunk_size:
                 bulk(es_sink, new_items, chunk_size=chunk_size, request_timeout=120)
