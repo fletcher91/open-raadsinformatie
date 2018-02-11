@@ -233,7 +233,7 @@ def format_search_results(results, cbs_code=None):
         hit_source['toponyms'] = aggregate_toponyms(hit_source, cbs_code)
 
         # filter snippets for the selected area
-        filter_doc_snippets(hit_source, cbs_code)
+        filter_doc_snippets(hit_source, cbs_code, remove_fields=True)
 
         formatted_results[hit['_type']].append(hit_source)
 

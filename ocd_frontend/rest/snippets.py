@@ -110,13 +110,16 @@ def add_doc_snippets(doc_source):
             source['snippets_by_code'] = by_code
 
 
-def filter_doc_snippets(doc_source, cbs_code=None, compact_sources=False):
+def filter_doc_snippets(doc_source, cbs_code=None, remove_fields=False):
     if doc_source.get('snippets'):
         doc_source['snippets'] = get_filtered_snippets(
             doc_source['snippets'],
             doc_source['snippets_by_code'],
             cbs_code
         )
+        if remove_fields is True:
+            doc_source.pop('annotations', None)
+            doc_source.pop('snippets_by_code', None)
 
     for source in doc_source.get('sources', []):
         if source.get('snippets'):
@@ -125,10 +128,10 @@ def filter_doc_snippets(doc_source, cbs_code=None, compact_sources=False):
                 source['snippets_by_code'],
                 cbs_code
             )
-
-        if compact_sources is True:
+        if remove_fields is True:
             source.pop('annotations', None)
             source.pop('description', None)
+            source.pop('snippets_by_code', None)
 
 
 def aggregate_toponyms(doc_source, cbs_code=None):
