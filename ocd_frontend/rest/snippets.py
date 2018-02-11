@@ -77,7 +77,7 @@ def get_filtered_snippets(snippets, by_code, cbs_code=None):
         code_postings = defaultdict(set)
         for snippet_postings in by_code.itervalues():
             for i, postings in snippet_postings.iteritems():
-                code_postings[i].update(postings)
+                code_postings[i].update(tuple(post) for post in postings)
         code_postings = [
             (i, sorted(postings))
             for i, postings in sorted(code_postings.iteritems())
