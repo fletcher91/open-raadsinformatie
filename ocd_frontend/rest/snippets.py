@@ -84,7 +84,7 @@ def get_filtered_snippets(snippets, by_code, cbs_code=None):
         ]
 
     snippets = [
-        format_snippet(snippets[i], postings)
+        format_snippet(snippets[int(i)], postings)
         for i, postings in code_postings
     ]
 
