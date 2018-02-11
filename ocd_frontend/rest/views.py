@@ -512,6 +512,19 @@ def search_source(source_id, doc_type=u'items'):
                         'fields': current_app.config['SIMPLE_QUERY_FIELDS'][doc_type]
                     }
                 },
+                'should': [
+                    {
+                        'exists': {
+                            'field': 'sources.snippets'
+                        }
+                    },
+                    {
+                        'exists': {
+                            'field': 'description'
+                        }
+                    },
+                ],
+                'minimum_should_match': 1,
                 'filter': {}
             }
         },
