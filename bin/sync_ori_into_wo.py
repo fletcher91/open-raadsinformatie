@@ -15,15 +15,14 @@ from elasticsearch.helpers import scan, bulk
 from pygtrie import CharTrie
 from tqdm import tqdm
 
-from ocd_frontend.rest.snippets import add_doc_snippets
-
 BASE_DIR = os.path.dirname(
     os.path.dirname(
         os.path.abspath(__file__)
     )
 )
-FRONTEND_PATH = os.path.join(BASE_DIR, 'ocd_frontend')
-sys.path.insert(0, os.path.abspath(FRONTEND_PATH))
+sys.path.insert(0, os.path.abspath(BASE_DIR))
+
+from ocd_frontend.rest.snippets import add_doc_snippets
 
 
 parser = argparse.ArgumentParser()
