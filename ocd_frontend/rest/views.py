@@ -52,7 +52,10 @@ def parse_search_request(data, doc_type, mlt=False):
 
     # Additional fields requested to include in the response
     include_fields = [
-        f.strip() for f in data.get('include_fields', []) if f.strip()]
+        f.strip()
+        for f in data.get('include_fields', [])
+        if f.strip()
+    ]
 
     n_from, n_size = validate_from_and_size(data)
 
@@ -469,7 +472,7 @@ def delete_subscription(token):
                 doc_type=u'subscription', id=token,
                 index=current_app.config['SUBSCRIPTION_INDEX'],
             )
-        except Exception:
+        except NotFoundError:
             return 'Subscription not found', 404
     return render_template('delete_subscription.html')
 
@@ -488,7 +491,10 @@ def search_source(source_id, doc_type=u'items'):
     data = request.data or request.args
     search_req = parse_search_request(data, doc_type)
 
-    exclude_by_default = ['organization'] + current_app.config['EXCLUDED_FIELDS_DEFAULT']
+    exclude_by_default = current_app.config['EXCLUDED_FIELDS_DEFAULT'] + [
+        'organization',
+        'sources.description',
+    ]
     excluded_fields = validate_included_fields(
         include_fields=search_req['include_fields'],
         excluded_fields=exclude_by_default,
