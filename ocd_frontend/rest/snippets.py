@@ -72,11 +72,11 @@ def get_filtered_snippets(snippets, by_code, cbs_code=None):
         return []
 
     if cbs_code:
-        code_postings = sorted(by_code[cbs_code].iteritems())
+        code_postings = sorted(by_code.get(cbs_code, {}).iteritems())
     else:
         code_postings = defaultdict(set)
         for snippet_postings in by_code.itervalues():
-            for i, postings in snippet_postings:
+            for i, postings in snippet_postings.iteritems():
                 code_postings[i].update(postings)
         code_postings = [
             (i, sorted(postings))
