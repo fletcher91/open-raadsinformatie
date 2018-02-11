@@ -219,6 +219,14 @@
                         "annotations": {
                             "type": "object",
                             "enabled": "false"
+                        },
+                        "snippets": {
+                            "type": "text",
+                            "analyzer": "text_nl"
+                        },
+                        "snippets_by_code": {
+                            "type": "object",
+                            "enabled": "false"
                         }
                     }
                   },
@@ -235,6 +243,14 @@
                     "type": "keyword"
                 },
                 "annotations": {
+                    "type": "object",
+                    "enabled": "false"
+                },
+                "snippets": {
+                    "type": "text",
+                    "analyzer": "text_nl"
+                },
+                "snippets_by_code": {
                     "type": "object",
                     "enabled": "false"
                 }
