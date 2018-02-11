@@ -111,6 +111,7 @@ def load_bucket(source_index, municipality_code, latest_date, bucket):
         for item in items:
             item['_index'] = waaroverheid_index
             del item['_score']
+            # TODO: exclude fields in query
             item['_source'].pop('source_data')
             item['_source'].pop('combined_index_data')
             if 'meta' in item['_source']:
