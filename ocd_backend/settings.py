@@ -81,7 +81,7 @@ if os.path.exists('/var/log/backend.err'):
     LOGGING['loggers']['celery']['handlers'] = ['console', 'log', 'docker']
 
 
-ELASTICSEARCH_HOST = 'elasticsearch'
+ELASTICSEARCH_HOST = 'localhost'
 ELASTICSEARCH_PORT = 9200
 
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
