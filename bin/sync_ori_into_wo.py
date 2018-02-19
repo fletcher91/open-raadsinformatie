@@ -13,6 +13,7 @@ from datetime import datetime
 from elasticsearch import Elasticsearch, NotFoundError
 from elasticsearch.helpers import scan, bulk
 from pygtrie import CharTrie
+from pymongo import MongoClient
 from tqdm import tqdm
 
 BASE_DIR = os.path.dirname(
@@ -48,6 +49,9 @@ ES_SINK_PORT = 9200
 es_source = Elasticsearch([{'host': ES_HOST, 'port': ES_SOURCE_PORT}], timeout=30)
 es_sink = Elasticsearch([{'host': ES_HOST, 'port': ES_SINK_PORT}])
 
+mongo_client = MongoClient()
+llv_db = mongo_client.osm_globe
+
 
 def geocode_collection(source_index, municipality_code):
     print('\nGeocoding {} for municipality {}'.format(source_index, municipality_code))
@@ -62,8 +66,19 @@ def geocode_collection(source_index, municipality_code):
         latest_date, buckets = get_incomplete_buckets(source_index, waaroverheid_index)
         for bucket in buckets:
             load_bucket(source_index, municipality_code, latest_date, bucket)
+
+        sink_count = es_sink.count(index=waaroverheid_index)['count']
     else:
         print('Skipping: source {} docs, sink {} docs'.format(source_count, sink_count))
+
+    # update doc counts in MongoDB
+    for db_collection in ['municipality_highover', 'municipality_closeup']:
+        llv_db[db_collection].update_one(
+            {'properties.GM_CODE': municipality_code},
+            {'$set': {
+                'properties.doc_count': sink_count
+            }}
+        )
 
 
 def load_bucket(source_index, municipality_code, latest_date, bucket):
