@@ -17,7 +17,7 @@ def log_event(user_agent, referer, user_ip, created_at, event_type, **kwargs):
     :type user_agent: str
     :param referer: the contents of the HTTP referer request header
     :type referer: str or None
-    :param user_ip: the user's IP address
+    :param user_ip: the user's pseudonymized IP address
     :type user_ip: str
     :param crated_at: the datetime when the event was created (in UTC)
     :type created_at: datetime.datetime

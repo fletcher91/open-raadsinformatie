@@ -11,6 +11,7 @@ from elasticsearch import NotFoundError
 from flask import (
     Blueprint, current_app, request, jsonify, redirect, url_for, send_file,
     render_template)
+from passlib.handlers.pbkdf2 import pbkdf2_sha256
 
 from ocd_frontend import settings
 from ocd_frontend import mail
@@ -331,6 +332,15 @@ def construct_es_query(search_req, doc_type):
     return es_q
 
 
+def get_hashed_client_ip(request):
+    if not request.headers.getlist("X-Forwarded-For"):
+        client_ip = request.remote_addr
+    else:
+        client_ip = request.headers.getlist("X-Forwarded-For")[0]
+
+    return pbkdf2_sha256.using(salt=b'waaroveromverheid').hash(client_ip)
+
+
 # Retrieve the indices/sources and the total number of documents per
 # type (counting only documents which are not hidden!)
 @bp.route('/sources', methods=['GET'])
@@ -367,7 +377,7 @@ def list_sources():
         tasks.log_event.delay(
             user_agent=request.user_agent.string,
             referer=request.headers.get('Referer', None),
-            user_ip=request.remote_addr,
+            user_ip=get_hashed_client_ip(request),
             created_at=datetime.utcnow(),
             event_type='sources',
             query_time_ms=es_r['took']
@@ -408,7 +418,7 @@ def search(doc_type=u'items'):
         tasks.log_event.delay(
             user_agent=request.user_agent.string,
             referer=request.headers.get('Referer', None),
-            user_ip=request.remote_addr,
+            user_ip=get_hashed_client_ip(request),
             created_at=datetime.utcnow(),
             event_type='search',
             doc_type=doc_type,
@@ -572,7 +582,7 @@ def search_source(source_id, doc_type=u'items'):
         tasks.log_event.delay(
             user_agent=request.user_agent.string,
             referer=request.headers.get('Referer', None),
-            user_ip=request.remote_addr,
+            user_ip=get_hashed_client_ip(request),
             created_at=datetime.utcnow(),
             event_type='search',
             source_id=source_id,
@@ -619,7 +629,7 @@ def get_object(source_id, object_id, doc_type=u'items'):
         tasks.log_event.delay(
             user_agent=request.user_agent.string,
             referer=request.headers.get('Referer', None),
-            user_ip=request.remote_addr,
+            user_ip=get_hashed_client_ip(request),
             created_at=datetime.utcnow(),
             event_type='get_object',
             source_id=source_id,
@@ -662,7 +672,7 @@ def get_object_source(source_id, object_id, doc_type=u'items'):
         tasks.log_event.delay(
             user_agent=request.user_agent.string,
             referer=request.headers.get('Referer', None),
-            user_ip=request.remote_addr,
+            user_ip=get_hashed_client_ip(request),
             created_at=datetime.utcnow(),
             event_type='get_object_source',
             source_id=source_id,
@@ -844,7 +854,7 @@ def similar(object_id, source_id=None, doc_type=u'items'):
         tasks.log_event.delay(
             user_agent=request.user_agent.string,
             referer=request.headers.get('Referer', None),
-            user_ip=request.remote_addr,
+            user_ip=get_hashed_client_ip(request),
             created_at=datetime.utcnow(),
             event_type='search_similar',
             similar_to_source_id=source_id,
@@ -874,7 +884,7 @@ def resolve(url_id):
                 tasks.log_event.delay(
                     user_agent=request.user_agent.string,
                     referer=request.headers.get('Referer', None),
-                    user_ip=request.remote_addr,
+                    user_ip=get_hashed_client_ip(request),
                     created_at=datetime.utcnow(),
                     event_type='resolve_filepath',
                     url_id=url_id,
@@ -887,7 +897,7 @@ def resolve(url_id):
             tasks.log_event.delay(
                 user_agent=request.user_agent.string,
                 referer=request.headers.get('Referer', None),
-                user_ip=request.remote_addr,
+                user_ip=get_hashed_client_ip(request),
                 created_at=datetime.utcnow(),
                 event_type='resolve',
                 url_id=url_id,

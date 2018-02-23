@@ -4,6 +4,7 @@ celery[redis]~=4.1
 elasticsearch~=5.2
 intervaltree~=2.1
 nltk~=3.2
+passlib~=1.7
 pygtrie~=2.2
 pymongo~=3.6
 requests~=2.18
