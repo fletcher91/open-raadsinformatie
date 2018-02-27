@@ -14,16 +14,12 @@ es_service = ElasticsearchService(
 )
 
 # PUT Elasticsearch mapping
-log_mapping_file = 'ori_mapping_usage_logs.json'
-with open(root_path('es_mappings', log_mapping_file)) as f:
-    log_mapping = json.load(f)
+log_template_file = 'ori_usage_logs.json'
+with open(root_path('es_mappings', log_template_file)) as f:
+    log_template = json.load(f)
 
-logging_index = settings.USAGE_LOGGING_INDEX
-print('Putting {} as mapping for {}'.format(log_mapping_file, logging_index))
-es_service.put_mapping(
-    index=logging_index,
-    body=log_mapping
-)
+print('Putting {} as template for {}'.format(log_template_file, log_template['template']))
+es_service.put_template('ori_usage_logs', log_template)
 
 
 @celery.task(ignore_result=True)

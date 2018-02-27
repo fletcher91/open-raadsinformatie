@@ -1,4 +1,5 @@
 {
+    "template": "wo_usage_logs*",
     "settings": {
         "index": {
             "number_of_shards": 1,

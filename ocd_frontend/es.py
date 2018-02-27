@@ -30,8 +30,8 @@ class ElasticsearchService(object):
     def delete(self, *args, **kwargs):
         return self._es.delete(*args, **kwargs)
 
-    def put_mapping(self, *args, **kwargs):
-        return self._es.indices.put_mapping(*args, **kwargs)
+    def put_template(self, *args, **kwargs):
+        return self._es.indices.put_template(*args, **kwargs)
 
 
 def percolate_documents(documents):
