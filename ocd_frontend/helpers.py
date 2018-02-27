@@ -5,6 +5,15 @@ from flask import Blueprint
 from os import path
 
 
+FRONTEND_ROOT = path.dirname(
+    path.abspath(__file__)
+)
+
+
+def root_path(*args):
+    return path.join(FRONTEND_ROOT, *args)
+
+
 def register_blueprints(app, package_name, package_path):
     """Register all Blueprint instances on the specified Flask
     application found in all modules for the specified package.

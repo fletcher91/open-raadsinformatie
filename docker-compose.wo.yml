@@ -6,6 +6,7 @@ services:
         build: 'ocd_frontend'
         volumes:
             - ./ocd_frontend:/opt/ori/ocd_frontend
+            - ./es_mappings:/opt/ori/ocd_frontend/es_mappings:ro
         command: python wsgi.py
         ports:
             - "127.0.0.1:5000:5000"

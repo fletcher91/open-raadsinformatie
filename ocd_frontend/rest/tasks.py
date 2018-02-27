@@ -1,11 +1,24 @@
+import json
 from datetime import datetime
 
 from flask import current_app
 
 from ocd_frontend.factory import create_celery_app
-
+from ocd_frontend.helpers import root_path
 
 celery = create_celery_app()
+
+# PUT Elasticsearch mapping
+log_mapping_file = 'ori_mapping_usage_logs.json'
+with open(root_path('es_mappings', log_mapping_file)) as f:
+    log_mapping = json.load(f)
+
+logging_index = current_app.config['USAGE_LOGGING_INDEX']
+print('Putting {} as mapping for {}'.format(log_mapping_file, logging_index))
+current_app.es.indices.put_mapping(
+    index=logging_index,
+    body=log_mapping
+)
 
 
 @celery.task(ignore_result=True)
