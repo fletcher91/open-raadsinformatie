@@ -1,12 +1,29 @@
 import json
 from datetime import datetime
 
-from flask import current_app
-
+from ocd_frontend import settings
+from ocd_frontend.es import ElasticsearchService
 from ocd_frontend.factory import create_celery_app
 from ocd_frontend.helpers import root_path
 
 celery = create_celery_app()
+
+es_service = ElasticsearchService(
+    settings.ELASTICSEARCH_HOST,
+    settings.ELASTICSEARCH_PORT
+)
+
+# PUT Elasticsearch mapping
+log_mapping_file = 'ori_mapping_usage_logs.json'
+with open(root_path('es_mappings', log_mapping_file)) as f:
+    log_mapping = json.load(f)
+
+logging_index = settings.USAGE_LOGGING_INDEX
+print('Putting {} as mapping for {}'.format(log_mapping_file, logging_index))
+es_service.put_mapping(
+    index=logging_index,
+    body=log_mapping
+)
 
 
 @celery.task(ignore_result=True)
@@ -53,8 +70,8 @@ def log_event(user_agent, referer, user_ip, created_at, event_type, **kwargs):
         'event_properties': available_event_types[event_type](**kwargs)
     }
 
-    current_app.es.create(index=current_app.config['USAGE_LOGGING_INDEX'],
-                          doc_type=event_type, body=event)
+    es_service.create(index=settings.USAGE_LOGGING_INDEX,
+                      doc_type=event_type, body=event)
 
     return event
 
@@ -171,17 +188,3 @@ def resolve_thumbnail(url_id, requested_size='original'):
         'url_id': url_id,
         'requested_size': requested_size
     }
-
-
-if __name__.endswith('tasks'):
-    # PUT Elasticsearch mapping
-    log_mapping_file = 'ori_mapping_usage_logs.json'
-    with open(root_path('es_mappings', log_mapping_file)) as f:
-        log_mapping = json.load(f)
-
-    logging_index = current_app.config['USAGE_LOGGING_INDEX']
-    print('Putting {} as mapping for {}'.format(log_mapping_file, logging_index))
-    current_app.es.indices.put_mapping(
-        index=logging_index,
-        body=log_mapping
-    )
