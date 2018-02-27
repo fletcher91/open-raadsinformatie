@@ -3,7 +3,7 @@ import os.path
 DEBUG = True
 
 # Sendgrid settings
-SENDGRID_API_KEY = 'apikey'
+SENDGRID_API_KEY = os.environ.get('WO_SENDGRID_KEY')
 SENDGRID_FROM_ADDRESS = 'no-reply@waaroverheid.nl'
 
 # Celery settings
