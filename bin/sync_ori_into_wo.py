@@ -337,6 +337,14 @@ def get_incomplete_buckets(ori_alias, waaroverheid_index):
 
 
 if __name__ == '__main__':
+    # PUT Elasticsearch mapping template
+    wo_template_file = 'wo_template.json'
+    with open(os.path.join(BASE_DIR, 'es_mappings', wo_template_file)) as f:
+        wo_template = json.load(f)
+
+    print('Putting {} as template for {}'.format(wo_template_file, wo_template['template']))
+    es_sink.indices.put_template('ori_template', wo_template)
+
     # input validation
     if args.source_collection and args.municipality_code:
         if not es_source.indices.exists(index=args.source_collection):
