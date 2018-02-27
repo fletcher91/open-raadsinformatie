@@ -438,6 +438,7 @@ def subscribe_search():
             'token': token,
             'activated': False,
             'query': es_query['query'],
+            'query_string': data['query_string'],
         },
     )
 
