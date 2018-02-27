@@ -37,7 +37,7 @@ def log_event(user_agent, referer, user_ip, created_at, event_type, **kwargs):
         'resolve_thumbnail': resolve_thumbnail
     }
 
-    if event_type not in available_event_types.keys():
+    if event_type not in available_event_types:
         raise ValueError('"%s" is an unknown event type' % event_type)
 
     # Base structure of an event
@@ -58,7 +58,7 @@ def log_event(user_agent, referer, user_ip, created_at, event_type, **kwargs):
     return event
 
 
-def search_event(query, hits, n_total_hits, query_time_ms, source_id=None):
+def search_event(query, hits, n_total_hits, query_time_ms, source_id=None, doc_type=None):
     """Format the properties of the ``search`` event.
 
     :param query: a dictionary that specifies the query and it's options
@@ -74,10 +74,13 @@ def search_event(query, hits, n_total_hits, query_time_ms, source_id=None):
                       is ``None``, the search was executed against the
                       combined index.
     :type source_id: str or None
+    :param doc_type: specifies the document type (if any)
+    :type doc_type: str or None
     """
 
     return {
         'source_id': source_id,
+        'doc_type': doc_type,
         'query': query,
         'hits': hits,
         'n_total_hits': n_total_hits,

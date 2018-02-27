@@ -7,10 +7,10 @@ SENDGRID_API_KEY = 'apikey'
 SENDGRID_FROM_ADDRESS = 'no-reply@waaroverheid.nl'
 
 # Celery settings
-CELERY_BROKER_URL = 'redis://redis:6379/1'
+CELERY_BROKER_URL = 'redis://localhost:6379/1'
 
 # Elasticsearch
-ELASTICSEARCH_HOST = 'elasticsearch'
+ELASTICSEARCH_HOST = 'localhost'
 ELASTICSEARCH_PORT = 9200
 
 # The default number of hits to return for a search request via the REST API
@@ -360,7 +360,7 @@ RESOLVER_URL_INDEX = 'ori_resolver'
 # Determines if API usage events should be logged
 USAGE_LOGGING_ENABLED = True
 # Name of the Elasticsearch index used to store logged events
-USAGE_LOGGING_INDEX = 'npo_usage_logs'
+USAGE_LOGGING_INDEX = 'wo_usage_logs'
 
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 DUMPS_DIR = os.path.join(os.path.dirname(ROOT_PATH), 'dumps')
