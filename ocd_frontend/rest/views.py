@@ -441,7 +441,7 @@ def subscribe_search():
 
     current_app.es.index(
         index=current_app.config['SUBSCRIPTION_INDEX'],
-        doc_type=u'subscription',
+        doc_type=data['doc_index'],
         id=token,
         body={
             'email': data['email'],

@@ -7,7 +7,7 @@
         }
     },
     "mappings": {
-        "subscription": {
+        "_default_": {
             "_all": {
                 "enabled": false
             },
