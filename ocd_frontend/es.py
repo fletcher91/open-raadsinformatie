@@ -37,7 +37,7 @@ class ElasticsearchService(object):
 def percolate_documents(documents):
     es = ElasticsearchService(
         settings.ELASTICSEARCH_HOST, settings.ELASTICSEARCH_PORT)
-    result = es.search(index='ori_subscriptions', body={
+    result = es.search(index=settings.SUBSCRIPTION_INDEX, body={
         "query": {
             "constant_score": {
                 "filter": {

@@ -4,6 +4,7 @@ import json
 from flask import jsonify, request
 
 from ocd_frontend.factory import create_app_factory
+from ocd_frontend.helpers import root_path
 
 
 def create_app(settings_override=None):
@@ -19,7 +20,17 @@ def create_app(settings_override=None):
 
     app.after_request(add_cors_headers)
 
+    put_template(app.es, 'wo_alerts.json')
+
     return app
+
+
+def put_template(es_service, template_file):
+    with open(root_path('es_mappings', template_file)) as f:
+        template = json.load(f)
+
+    print('Putting {} as template for {}'.format(template_file, template['template']))
+    es_service.put_template(template_file[:-5], template)
 
 
 class OcdApiError(Exception):
