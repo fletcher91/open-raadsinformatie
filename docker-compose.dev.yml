@@ -12,6 +12,11 @@ services:
 
     redis:
         image: 'redis'
+        volumes:
+         - redisdata:/data
+        sysctls:
+         - net.core.somaxconn=65535
+        mem_limit: 2g
         ports:
             - "127.0.0.1:6379:6379"
 
