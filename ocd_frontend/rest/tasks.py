@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from uuid import uuid4
 
 from ocd_frontend import settings
 from ocd_frontend.es import ElasticsearchService
@@ -66,8 +67,12 @@ def log_event(user_agent, referer, user_ip, created_at, event_type, **kwargs):
         'event_properties': available_event_types[event_type](**kwargs)
     }
 
-    es_service.create(index=settings.USAGE_LOGGING_INDEX,
-                      doc_type=event_type, body=event)
+    es_service.create(
+        index=settings.USAGE_LOGGING_INDEX,
+        doc_type=event_type,
+        id=uuid4().hex,
+        body=event
+    )
 
     return event
 
