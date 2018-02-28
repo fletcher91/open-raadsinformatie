@@ -8,6 +8,7 @@ SENDGRID_FROM_ADDRESS = 'no-reply@waaroverheid.nl'
 
 # Celery settings
 CELERY_BROKER_URL = 'redis://redis:6379/1'
+CELERY_ACCEPT_CONTENT = ['pickle']
 
 # Elasticsearch
 ELASTICSEARCH_HOST = 'elasticsearch'
