@@ -17,10 +17,7 @@
             "properties": {
                 "email": {"type": "keyword"},
                 "token": {"type": "keyword"},
-                "querystring": {
-                    "type": "string",
-                    "index": "not_analyzed"
-                },
+                "querystring": {"type": "keyword"},
                 "activated": {"type": "boolean"},
                 "query": {"type": "percolator"}
             }

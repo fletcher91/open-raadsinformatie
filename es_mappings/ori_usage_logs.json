@@ -23,16 +23,14 @@
                     "type": "object",
                     "properties": {
                         "user_agent": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text"
                         },
                         "referer": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": false
                         },
                         "ip": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword"
                         }
                     }
                 }
@@ -45,8 +43,7 @@
                         "path_match": "event_properties.query.*",
                         "match_mapping_type": "string",
                         "mapping": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword"
                         }
                     }
                 }
@@ -56,12 +53,10 @@
                     "type": "object",
                     "properties": {
                         "source_id": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword"
                         },
                         "doc_type": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword"
                         },
                         "query": {
                             "dynamic": true,
@@ -70,12 +65,10 @@
                         "hits": {
                             "properties": {
                                 "source_id": {
-                                    "type": "string",
-                                    "index": "not_analyzed"
+                                    "type": "keyword"
                                 },
                                 "object_id": {
-                                    "type": "string",
-                                    "index": "not_analyzed"
+                                   "type": "keyword"
                                 },
                                 "score": {
                                     "type": "float"
@@ -101,12 +94,10 @@
                             "type": "object",
                             "properties": {
                                 "source_id": {
-                                    "type": "string",
-                                    "index": "not_analyzed"
+                                    "type": "keyword"
                                 },
                                 "object_id": {
-                                    "type": "string",
-                                    "index": "not_analyzed"
+                                    "type": "keyword"
                                 }
                             }
                         },
@@ -117,12 +108,10 @@
                         "hits": {
                             "properties": {
                                 "source_id": {
-                                    "type": "string",
-                                    "index": "not_analyzed"
+                                    "type": "keyword"
                                 },
                                 "object_id": {
-                                    "type": "string",
-                                    "index": "not_analyzed"
+                                    "type": "keyword"
                                 },
                                 "score": {
                                     "type": "float"
@@ -157,12 +146,10 @@
                     "type": "object",
                     "properties": {
                         "source_id": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword"
                         },
                         "object_id": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword"
                         }
                     }
                 }
@@ -174,12 +161,10 @@
                     "type": "object",
                     "properties": {
                         "source_id": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword"
                         },
                         "object_id": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword"
                         }
                     }
                 }
@@ -191,8 +176,7 @@
                     "type": "object",
                     "properties": {
                         "url_id": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword"
                         }
                     }
                 }
@@ -204,12 +188,10 @@
                     "type": "object",
                     "properties": {
                         "url_id": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                           "type": "keyword"
                         },
                         "requested_size": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword"
                         }
                     }
                 }
