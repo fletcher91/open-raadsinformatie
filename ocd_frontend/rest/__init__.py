@@ -20,16 +20,27 @@ def create_app(settings_override=None):
 
     app.after_request(add_cors_headers)
 
-    put_template(app.es, 'wo_alerts.json')
+    put_alerts_template(app.es)
 
     return app
 
 
-def put_template(es_service, template_file):
+def put_alerts_template(es_service):
+    template_file = 'wo_alerts.json'
     with open(root_path('es_mappings', template_file)) as f:
         template = json.load(f)
 
-    print('Putting {} as template for {}'.format(template_file, template['template']))
+    with open(root_path('es_mappings', 'wo_template.json')) as f:
+        mapping_template = json.load(f)
+    template['settings']['index']['analysis'] = mapping_template['settings']['index']['analysis']
+    template['mappings']['document'] = {
+        'properties': mapping_template['mappings']['_default_']['properties']
+    }
+    import pprint
+    pprint.pprint(template)
+
+    print('Putting {} as template for {}'.format(
+        template_file, template['template']))
     es_service.put_template(template_file[:-5], template)
 
 
