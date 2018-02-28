@@ -71,23 +71,24 @@ ALLOWED_INCLUDE_FIELDS_DEFAULT = []
 ALLOWED_INCLUDE_FIELDS_SEARCH = []
 
 SIMPLE_QUERY_FIELDS = {
-    'persons': [
-        'biography^4', 'name^3', 'other_names^2', 'memberships.organization.name^2',
-        'memberships.role'],
+    'persons': ['name^3'],
     'organizations': ['name^4', 'description'],
     'events': [
         'name^4', 'description^3', 'location', 'organization.name',
-        'organization.description', 'sources.note^2', 'sources.description'],
+        'organization.description', 'sources.note^2', 'sources.description'
+    ],
     'motions': [
         'name^4', 'text^3', 'organization.name', 'sources.note^2',
-        'sources.description'],
+        'sources.description'
+    ],
     'vote_events': [
         'name^4', 'motion.text^3', 'organization.name', 'sources.note^2',
-        'sources.description'],
+        'sources.description'
+    ],
     'items': [
         'name^4', 'description^3', 'location', 'organization.name',
         'organization.description', 'sources.note^2', 'sources.description',
-        'biography^4', 'other_names^2', 'memberships.organization.name^2']
+    ]
 }
 
 DOC_TYPE_DEFAULT = u'items'

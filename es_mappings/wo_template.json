@@ -91,6 +91,15 @@
                     "type": "text",
                     "analyzer": "text_nl"
                 },
+                "name": {
+                    "type": "text",
+                    "fields" : {
+                        "keyword" : {
+                            "type" : "keyword",
+                            "ignore_above" : 256
+                        }
+                    }
+                },
                 "description": {
                     "type": "text",
                     "analyzer": "text_nl"
@@ -102,8 +111,45 @@
                     "type": "date",
                     "format": "dateOptionalTime"
                 },
+                "start_date": {
+                    "type": "date"
+                },
+                "end_date": {
+                    "type": "date"
+                },
                 "date_granularity": {
                     "type": "short"
+                },
+                "organization" : {
+                    "properties" : {
+                        "description" : {
+                            "type" : "text",
+                            "fields" : {
+                                "keyword" : {
+                                    "type" : "keyword",
+                                    "ignore_above" : 256
+                                }
+                            }
+                        },
+                        "id" : {
+                            "type" : "text",
+                            "fields" : {
+                                "keyword" : {
+                                    "type" : "keyword",
+                                    "ignore_above" : 256
+                                }
+                            }
+                        },
+                        "name" : {
+                            "type" : "text",
+                            "fields" : {
+                                "keyword" : {
+                                    "type" : "keyword",
+                                    "ignore_above" : 256
+                                }
+                            }
+                        }
+                    }
                 },
                 "authors": {
                     "type": "text",
