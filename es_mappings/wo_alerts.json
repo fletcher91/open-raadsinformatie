@@ -16,7 +16,7 @@
                 "token": {"type": "keyword"},
                 "querystring": {
                     "type": "string",
-                    "index": "false"
+                    "index": "not_analyzed"
                 },
                 "activated": {"type": "boolean"},
                 "query": {"type": "percolator"}
