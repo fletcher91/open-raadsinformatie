@@ -1,5 +1,5 @@
 {
-    "template": "wo_*",
+    "template": "wo_gm*",
     "settings": {
         "index": {
             "number_of_shards": 1,

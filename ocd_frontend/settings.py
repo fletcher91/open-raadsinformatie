@@ -7,10 +7,11 @@ SENDGRID_API_KEY = os.environ.get('WO_SENDGRID_KEY')
 SENDGRID_FROM_ADDRESS = 'no-reply@waaroverheid.nl'
 
 # Celery settings
-CELERY_BROKER_URL = 'redis://localhost:6379/1'
+CELERY_BROKER_URL = 'redis://redis:6379/1'
+CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
 # Elasticsearch
-ELASTICSEARCH_HOST = 'localhost'
+ELASTICSEARCH_HOST = 'elasticsearch'
 ELASTICSEARCH_PORT = 9200
 
 # The default number of hits to return for a search request via the REST API
@@ -23,7 +24,7 @@ MAX_SEARCH_SIZE = 100
 COMBINED_INDEX = 'ori_combined_index'
 
 # the index storing subscriptions
-SUBSCRIPTION_INDEX = 'ori_subscriptions'
+SUBSCRIPTION_INDEX = 'alerts_wo'
 
 # The default prefix used for all data
 DEFAULT_INDEX_PREFIX = 'wo'
@@ -360,7 +361,7 @@ RESOLVER_URL_INDEX = 'ori_resolver'
 # Determines if API usage events should be logged
 USAGE_LOGGING_ENABLED = True
 # Name of the Elasticsearch index used to store logged events
-USAGE_LOGGING_INDEX = 'wo_usage_logs'
+USAGE_LOGGING_INDEX = 'usage_logs_wo'
 
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 DUMPS_DIR = os.path.join(os.path.dirname(ROOT_PATH), 'dumps')

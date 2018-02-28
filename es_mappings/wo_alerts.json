@@ -1,0 +1,26 @@
+{
+    "template": "alerts_wo*",
+    "settings": {
+        "index": {
+            "number_of_shards": 1,
+            "number_of_replicas": 0
+        }
+    },
+    "mappings": {
+        "_default_": {
+            "_all": {
+                "enabled": false
+            },
+            "properties": {
+                "email": {"type": "keyword"},
+                "token": {"type": "keyword"},
+                "querystring": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "activated": {"type": "boolean"},
+                "query": {"type": "percolator"}
+            }
+        }
+    }
+}

@@ -10,6 +10,11 @@ services:
         command: python wsgi.py
         ports:
             - "127.0.0.1:5000:5000"
+        environment:
+            - WO_SENDGRID_KEY
+        depends_on:
+          elasticsearch:
+            condition: service_healthy
 
     redis:
         image: 'redis'
@@ -32,6 +37,11 @@ services:
             - esdata:/usr/share/elasticsearch/data
         ports:
             - "127.0.0.1:9200:9200"
+        healthcheck:
+          test: wget -q -O - http://127.0.0.1:9200/_cat/health
+          interval: 15s
+          timeout: 10s
+          retries: 3
 
 volumes:
     esdata:
