@@ -1,4 +1,4 @@
-version: "2.1"
+version: "2.2"
 
 services:
 
@@ -9,6 +9,7 @@ services:
             - ./ocd_frontend:/opt/ori/ocd_frontend
             - ./es_mappings:/opt/ori/ocd_frontend/es_mappings:ro
         command: python wsgi.py
+        restart: unless-stopped
         ports:
             - "127.0.0.1:5000:5000"
         environment:
@@ -24,7 +25,7 @@ services:
         volumes:
             - ./ocd_frontend:/opt/ori/ocd_frontend
             - ./es_mappings:/opt/ori/ocd_frontend/es_mappings:ro
-        working_dir: /opt/ori
+        restart: unless-stopped
         environment:
             - WO_SENDGRID_KEY
         depends_on:
@@ -35,6 +36,7 @@ services:
         image: 'redis'
         volumes:
          - redisdata:/data
+        restart: unless-stopped
         sysctls:
          - net.core.somaxconn=65535
         mem_limit: 2g
@@ -50,6 +52,7 @@ services:
             - xpack.security.enabled=false
         volumes:
             - esdata:/usr/share/elasticsearch/data
+        restart: unless-stopped
         ports:
             - "127.0.0.1:9200:9200"
         healthcheck:

@@ -5,4 +5,5 @@ RUN adduser -D -H celery \
   && chown celery:celery /var/run/celery
 
 USER celery
+WORKDIR /opt/ori
 CMD celery -A ocd_frontend.rest.tasks worker -l info
