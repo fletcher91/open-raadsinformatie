@@ -435,9 +435,11 @@ def search(doc_type=u'items'):
 @decode_json_post_data
 def subscribe_search():
     data = request.data or request.args
+    # TODO: pop start_date and end_date filters
+    # TODO: also remove date filters from data['url']
     search_req = parse_search_request(data['query'], u'items')
     es_query = construct_es_query(search_req, u'items')
-    token = uuid.uuid4()
+    token = uuid.uuid4().hex
 
     current_app.es.index(
         index=current_app.config['SUBSCRIPTION_INDEX'],
@@ -454,37 +456,45 @@ def subscribe_search():
 
     mail.send(
         data['email'], 'Activate your WaarOverheid subscription',
-        render_template('activate_email.txt', token=token)
+        render_template('activate_email.txt', doc_type=data['doc_index'], token=token)
     )
     return '', 201
 
 
-@bp.route('/subscription/<token>/activate', methods=['GET'])
-def activate_subscription(token):
+@bp.route('/subscription/<doc_type>/<token>/activate', methods=['GET'])
+def activate_subscription(doc_type, token):
     result = current_app.es.get(
-        id=token, index=current_app.config['SUBSCRIPTION_INDEX'],
-        doc_type=u'subscription'
+        id=token,
+        index=current_app.config['SUBSCRIPTION_INDEX'],
+        doc_type=doc_type
     )
     if not result['found']:
         raise OcdApiError('token not found', 404)
+
     subscription = result['_source']
     subscription['activated'] = True
     current_app.es.index(
         index=current_app.config['SUBSCRIPTION_INDEX'],
-        doc_type=u'subscription', id=token, body=subscription)
+        doc_type=doc_type,
+        id=token,
+        body=subscription
+    )
     return render_template('activate_subscription.html')
 
 
-@bp.route('/subscription/<token>/delete', methods=['GET', 'POST'])
-def delete_subscription(token):
-    if request.method == "POST":
+@bp.route('/subscription/<doc_type>/<token>/delete', methods=['GET', 'POST'])
+def delete_subscription(doc_type, token):
+    if request.method == 'POST':
+        current_app.es.delete(
+            index=current_app.config['SUBSCRIPTION_INDEX'],
+            doc_type=doc_type,
+            id=token,
+        )
         try:
-            current_app.es.delete(
-                doc_type=u'subscription', id=token,
-                index=current_app.config['SUBSCRIPTION_INDEX'],
-            )
+            pass
         except NotFoundError:
             return 'Subscription not found', 404
+
     return render_template('delete_subscription.html')
 
 

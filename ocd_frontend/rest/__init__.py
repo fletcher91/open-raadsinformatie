@@ -32,12 +32,11 @@ def put_alerts_template(es_service):
 
     with open(root_path('es_mappings', 'wo_template.json')) as f:
         mapping_template = json.load(f)
+
     template['settings']['index']['analysis'] = mapping_template['settings']['index']['analysis']
     template['mappings']['document'] = {
         'properties': mapping_template['mappings']['_default_']['properties']
     }
-    import pprint
-    pprint.pprint(template)
 
     print('Putting {} as template for {}'.format(
         template_file, template['template']))
