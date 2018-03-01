@@ -2,11 +2,12 @@ import copy
 import glob
 import os
 import uuid
+from collections import defaultdict
 from datetime import datetime
 from hashlib import sha1
-from urlparse import urljoin
+from urllib import urlencode
+from urlparse import urljoin, urlparse, parse_qs, urlunparse
 
-from collections import defaultdict
 from elasticsearch import NotFoundError
 from flask import (
     Blueprint, current_app, request, jsonify, redirect, url_for, send_file,
@@ -435,8 +436,20 @@ def search(doc_type=u'items'):
 @decode_json_post_data
 def subscribe_search():
     data = request.data or request.args
-    # TODO: pop start_date and end_date filters
-    # TODO: also remove date filters from data['url']
+
+    # remove any date filters from the query
+    date_fields = ['start_date', 'end_date', 'date']
+    for field in date_fields:
+        data['query'].get('filters', {}).pop(field, None)
+
+    # also remove date filters from data['url']
+    rel_url = urlparse(data['url'])
+    qs_dict = parse_qs(rel_url.query)
+    for url_param in ['from', 'to']:
+        qs_dict.pop(url_param, None)
+    rel_url = rel_url._replace(
+        query=urlencode(qs_dict, True)
+    )
     search_req = parse_search_request(data['query'], u'items')
     es_query = construct_es_query(search_req, u'items')
     token = uuid.uuid4().hex
@@ -449,14 +462,20 @@ def subscribe_search():
             'email': data['email'],
             'token': token,
             'activated': False,
+            'area_name': data['area_name'],
             'query': es_query['query'],
-            'querystring': data['url'],
+            'querystring': urlunparse(rel_url),
         },
     )
 
     mail.send(
-        data['email'], 'Activate your WaarOverheid subscription',
-        render_template('activate_email.txt', doc_type=data['doc_index'], token=token)
+        data['email'], 'Activeer uw WaarOverheid meldingen voor {}'.format(data['area_name']),
+        render_template(
+            'activate_email.txt',
+            doc_type=data['doc_index'],
+            token=token,
+            area_name=data['area_name']
+        )
     )
     return '', 201
 
@@ -479,7 +498,10 @@ def activate_subscription(doc_type, token):
         id=token,
         body=subscription
     )
-    return render_template('activate_subscription.html')
+    return render_template(
+        'activate_subscription.html',
+        area_name=subscription['area_name']
+    )
 
 
 @bp.route('/subscription/<doc_type>/<token>/delete', methods=['GET', 'POST'])
