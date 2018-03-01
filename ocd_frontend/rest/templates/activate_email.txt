@@ -1,11 +1,21 @@
-Hello,
+Hallo,
 
-You have requested to be notified of new documents in a WaarOverheid search. Click the link below to activate your subscription:
+U heeft zich aangemeld om een e-mail te ontvangen wanneer er nieuwe zoekresultaten zijn voor {{ area_name }} in WaarOverheid.
+
+Klik op de onderstaande link om te bevestigen dat u deze meldingen wilt ontvangen:
 
 https://api.waaroverheid.nl/subscription/{{ doc_type }}/{{ token }}/activate
 
-Om u meldingen te kunnen sturen hebben we uw emailadres opgeslagen.
-In het geval dat u de meldingen wilt stopzetten en uw emailadres wilt verwijderen uit onze database, gebruik de volgende link.
+Om u meldingen te kunnen sturen hebben we uw mailadres opgeslagen.
+In het geval dat u de meldingen wilt stopzetten en uw mailadres wilt verwijderen uit onze database, gebruik de volgende link:
 
 https://api.waaroverheid.nl/subscription/{{ doc_type }}/{{ token }}/delete
 
+Wanneer en hoe vaak u deze meldingen zult ontvangen is afhankelijk van de gemeente die de raadsinformatie aanlevert,
+en van de filters die u bij deze zoekopdracht hebt ingesteld.
+
+Zie voor meer informatie https://www.waaroverheid.nl
+
+Met vriendelijke groet,
+
+het WaarOverheid team
