@@ -12,6 +12,6 @@ from_address = Email(settings.SENDGRID_FROM_ADDRESS)
 
 def send(to, subject, content):
     to_addr = Email(to)
-    content = Content(content)
+    content = Content('text/plain', content)
     message = Mail(from_address, subject, to_addr, content)
     return sg.client.mail.send.post(request_body=message.get())
