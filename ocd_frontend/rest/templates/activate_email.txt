@@ -2,4 +2,10 @@ Hello,
 
 You have requested to be notified of new documents in a WaarOverheid search. Click the link below to activate your subscription:
 
-https://waaroverheid.github.io/subscription/{{ token }}/activate
+https://api.waaroverheid.nl/subscription/{{ doc_type }}/{{ token }}/activate
+
+Om u meldingen te kunnen sturen hebben we uw emailadres opgeslagen.
+In het geval dat u de meldingen wilt stopzetten en uw emailadres wilt verwijderen uit onze database, gebruik de volgende link.
+
+https://api.waaroverheid.nl/subscription/{{ doc_type }}/{{ token }}/delete
+
