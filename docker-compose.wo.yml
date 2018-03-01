@@ -3,13 +3,28 @@ version: "2.1"
 services:
 
     frontend:
-        build: 'ocd_frontend'
+        build: ./ocd_frontend
+        image: 'ori_frontend'
         volumes:
             - ./ocd_frontend:/opt/ori/ocd_frontend
             - ./es_mappings:/opt/ori/ocd_frontend/es_mappings:ro
         command: python wsgi.py
         ports:
             - "127.0.0.1:5000:5000"
+        environment:
+            - WO_SENDGRID_KEY
+        depends_on:
+          elasticsearch:
+            condition: service_healthy
+
+    celery:
+        build:
+          context: ./ocd_frontend
+          dockerfile: Docker-celery
+        volumes:
+            - ./ocd_frontend:/opt/ori/ocd_frontend
+            - ./es_mappings:/opt/ori/ocd_frontend/es_mappings:ro
+        working_dir: /opt/ori
         environment:
             - WO_SENDGRID_KEY
         depends_on:
