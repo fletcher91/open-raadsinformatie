@@ -24,7 +24,8 @@ es_service.put_template('ori_usage_logs', log_template)
 
 
 @celery.task(ignore_result=True)
-def log_event(user_agent, referer, user_ip, created_at, event_type, **kwargs):
+def log_event(user_agent, referer, user_ip, created_at, event_type,
+              es_index=settings.USAGE_LOGGING_INDEX, **kwargs):
     """Log user activity events to the specified 'usage logging'
     ElasticSearch index.
 
@@ -36,8 +37,9 @@ def log_event(user_agent, referer, user_ip, created_at, event_type, **kwargs):
     :type user_ip: str
     :param created_at: the datetime when the event was created (in UTC)
     :type created_at: datetime.datetime
-    :event_type: the name of the event type; available event types are
-                 specified under ``available_event_types``
+    :param event_type: the name of the event type; available event types are
+                       specified under ``available_event_types``
+    :param es_index: the Elasticsearch index into which to log this event
     :param kwargs: any additional arguments will be passed on to the
                    function responsible for processing the event
     """
@@ -49,7 +51,8 @@ def log_event(user_agent, referer, user_ip, created_at, event_type, **kwargs):
         'get_object': get_object_event,
         'get_object_source': get_object_event,
         'resolve': resolve_event,
-        'resolve_thumbnail': resolve_thumbnail
+        'resolve_thumbnail': resolve_thumbnail,
+        'feedback': user_feedback,
     }
 
     if event_type not in available_event_types:
@@ -68,7 +71,7 @@ def log_event(user_agent, referer, user_ip, created_at, event_type, **kwargs):
     }
 
     es_service.create(
-        index=settings.USAGE_LOGGING_INDEX,
+        index=es_index,
         doc_type=event_type,
         id=uuid4().hex,
         body=event
@@ -80,7 +83,7 @@ def log_event(user_agent, referer, user_ip, created_at, event_type, **kwargs):
 def search_event(query, hits, n_total_hits, query_time_ms, source_id=None, doc_type=None):
     """Format the properties of the ``search`` event.
 
-    :param query: a dictionary that specifies the query and it's options
+    :param query: a dictionary that specifies the query and its options
     :type query: dict
     :param hits: a list of the returned hits. Each item in the list should
                  contain a dictionary with the document and source ID.
@@ -188,4 +191,33 @@ def resolve_thumbnail(url_id, requested_size='original'):
     return {
         'url_id': url_id,
         'requested_size': requested_size
+    }
+
+
+def user_feedback(result_id, flags, comment, query, source_id=None, doc_type=None):
+    """Format the properties of the ``feedback`` event.
+
+    :param result_id: the ES document ID the feedback applies to
+    :type result_id: str
+    :param flags: a dictionary with labels as keys and boolean values
+    :type flags: dict
+    :param comment: the (optional) free text provided by the user
+    :type comment: str
+    :param query: a dictionary that specifies the query and its options
+    :type query: dict
+    :param source_id: specifies which index was targeted. If ``source_id``
+                      is ``None``, the search was executed against the
+                      combined index.
+    :type source_id: str or None
+    :param doc_type: specifies the document type (if any)
+    :type doc_type: str or None
+    """
+
+    return {
+        'source_id': source_id,
+        'doc_type': doc_type,
+        'result_id': result_id,
+        'flags': flags,
+        'comment': comment,
+        'query': query,
     }
