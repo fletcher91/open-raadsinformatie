@@ -1,10 +1,11 @@
 from functools import wraps
 import json
 
+import sys
 from flask import jsonify, request
 
 from ocd_frontend.factory import create_app_factory
-from ocd_frontend.helpers import root_path
+from ocd_frontend.helpers import root_path, put_mapping_template
 
 
 def create_app(settings_override=None):
@@ -21,6 +22,9 @@ def create_app(settings_override=None):
     app.after_request(add_cors_headers)
 
     put_alerts_template(app.es)
+    put_mapping_template(app.es, 'ori_usage_logs')
+    put_mapping_template(app.es, 'wo_user_feedback')
+    sys.stdout.flush()
 
     return app
 

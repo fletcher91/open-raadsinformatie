@@ -363,6 +363,8 @@ RESOLVER_URL_INDEX = 'ori_resolver'
 USAGE_LOGGING_ENABLED = True
 # Name of the Elasticsearch index used to store logged events
 USAGE_LOGGING_INDEX = 'usage_logs_wo'
+# Name of the Elasticsearch index used for user feedback
+USER_FEEDBACK_INDEX = 'user_feedback_wo'
 
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 DUMPS_DIR = os.path.join(os.path.dirname(ROOT_PATH), 'dumps')

@@ -1,11 +1,9 @@
-import json
 from datetime import datetime
 from uuid import uuid4
 
 from ocd_frontend import settings
 from ocd_frontend.es import ElasticsearchService
 from ocd_frontend.factory import create_celery_app
-from ocd_frontend.helpers import root_path
 
 celery = create_celery_app()
 
@@ -14,18 +12,10 @@ es_service = ElasticsearchService(
     settings.ELASTICSEARCH_PORT
 )
 
-# PUT Elasticsearch mapping
-log_template_file = 'ori_usage_logs.json'
-with open(root_path('es_mappings', log_template_file)) as f:
-    log_template = json.load(f)
-
-print('Putting {} as template for {}'.format(log_template_file, log_template['template']))
-es_service.put_template('ori_usage_logs', log_template)
-
 
 @celery.task(ignore_result=True)
 def log_event(user_agent, referer, user_ip, created_at, event_type,
-              es_index=settings.USAGE_LOGGING_INDEX, **kwargs):
+              event_index=settings.USAGE_LOGGING_INDEX, **kwargs):
     """Log user activity events to the specified 'usage logging'
     ElasticSearch index.
 
@@ -39,7 +29,7 @@ def log_event(user_agent, referer, user_ip, created_at, event_type,
     :type created_at: datetime.datetime
     :param event_type: the name of the event type; available event types are
                        specified under ``available_event_types``
-    :param es_index: the Elasticsearch index into which to log this event
+    :param event_index: the Elasticsearch index into which to log this event
     :param kwargs: any additional arguments will be passed on to the
                    function responsible for processing the event
     """
@@ -71,7 +61,7 @@ def log_event(user_agent, referer, user_ip, created_at, event_type,
     }
 
     es_service.create(
-        index=es_index,
+        index=event_index,
         doc_type=event_type,
         id=uuid4().hex,
         body=event
