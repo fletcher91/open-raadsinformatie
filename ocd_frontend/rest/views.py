@@ -390,16 +390,16 @@ def list_sources():
 @bp.route('/search', methods=['POST', 'GET'])
 @bp.route('/search/<doc_type>', methods=['POST', 'GET'])
 @decode_json_post_data
-def search(doc_type=u'items'):
+def search(doc_type=settings.DOC_TYPE_DEFAULT):
     data = request.data or request.args
     search_req = parse_search_request(data, doc_type)
 
     es_q = construct_es_query(search_req, doc_type)
 
+    request_doc_type = None
     if doc_type != settings.DOC_TYPE_DEFAULT:
         request_doc_type = doc_type
-    else:
-        request_doc_type = None
+
     es_r = current_app.es.search(
         body=es_q,
         index=current_app.config['COMBINED_INDEX'],
@@ -490,6 +490,7 @@ def activate_subscription(doc_type, token):
     if not result['found']:
         raise OcdApiError('token not found', 404)
 
+    # TODO: change index call into partial update
     subscription = result['_source']
     subscription['activated'] = True
     current_app.es.index(
@@ -523,7 +524,7 @@ def delete_subscription(doc_type, token):
 @bp.route('/<source_id>/search', methods=['POST', 'GET'])
 @bp.route('/<source_id>/<doc_type>/search', methods=['POST', 'GET'])
 @decode_json_post_data
-def search_source(source_id, doc_type=u'items'):
+def search_source(source_id, doc_type=settings.DOC_TYPE_DEFAULT):
     # Disallow searching in multiple indexes by providing a wildcard
     if '*' in source_id:
         raise OcdApiError('Invalid \'source_id\'', 400)
@@ -588,10 +589,9 @@ def search_source(source_id, doc_type=u'items'):
     if search_req['filters']:
         es_q['query']['bool']['filter'] = search_req['filters']
 
+    request_doc_type = None
     if doc_type != settings.DOC_TYPE_DEFAULT:
         request_doc_type = doc_type
-    else:
-        request_doc_type = None
 
     try:
         es_r = current_app.es.search(
@@ -961,3 +961,49 @@ def list_dumps():
                                          dump_file))
 
     return jsonify({'dumps': dumps})
+
+
+@bp.route('/<source_id>/<doc_type>/feedback', methods=['POST', 'GET'])
+@decode_json_post_data
+def log_user_feedback(source_id, doc_type):
+    data = request.data or request.args
+    search_req = parse_search_request(data, settings.DOC_TYPE_DEFAULT)
+    flags = {
+        label.lower().replace(' ', '_'): selected
+        for label, selected in data['flags'].items()
+    }
+    tasks.log_event.delay(
+        user_agent=request.user_agent.string,
+        referer=request.headers.get('Referer', None),
+        user_ip=get_hashed_client_ip(request),
+        created_at=datetime.utcnow(),
+        event_type='feedback',
+        event_index=settings.USER_FEEDBACK_INDEX,
+        source_id=source_id,
+        doc_type=doc_type,
+        result_id=data['result_id'],
+        flags=flags,
+        comment=data.get('comment', ''),
+        query=search_req,
+    )
+    response_message = {
+        'feedback_logged': True,
+    }
+    if flags.get('privacygevoelig') is True:
+        # hide this search result
+        try:
+            current_app.es.update(
+                index=source_id,
+                doc_type=doc_type,
+                id=data['result_id'],
+                body={
+                    'doc': {
+                        'hidden': True
+                    }
+                }
+            )
+            response_message['result_hidden'] = True
+        except NotFoundError:
+            response_message['result_hidden'] = False
+
+    return jsonify(response_message)
