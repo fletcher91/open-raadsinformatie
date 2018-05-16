@@ -24,6 +24,7 @@ BASE_DIR = os.path.dirname(
 sys.path.insert(0, os.path.abspath(BASE_DIR))
 
 from ocd_frontend.rest.snippets import add_doc_snippets
+from ocd_frontend.rest import tasks
 
 
 parser = argparse.ArgumentParser()
@@ -64,8 +65,11 @@ def geocode_collection(source_index, municipality_code):
 
     if source_count > sink_count:
         latest_date, buckets = get_incomplete_buckets(source_index, waaroverheid_index)
+        docs = []
         for bucket in buckets:
-            load_bucket(source_index, municipality_code, latest_date, bucket)
+            doc_ids = load_bucket(source_index, municipality_code, latest_date, bucket)
+            docs.extend(doc_ids)
+        tasks.email_subscribers.apply(args=[docs, latest_date])
 
         sink_count = es_sink.count(index=waaroverheid_index)['count']
     else:
@@ -122,6 +126,7 @@ def load_bucket(source_index, municipality_code, latest_date, bucket):
     )
 
     new_items = []
+    indexed_ids = []
     with tqdm(total=bucket['doc_count']) as progress_bar:
         for item in items:
             item['_index'] = waaroverheid_index
@@ -140,13 +145,16 @@ def load_bucket(source_index, municipality_code, latest_date, bucket):
             add_doc_snippets(annotated_item['_source'])
 
             new_items.append(annotated_item)
+            indexed_ids.append(annotated_item['_id'])
             if len(new_items) >= chunk_size:
-                bulk(es_sink, new_items, chunk_size=chunk_size, request_timeout=120)
+                bulk(es_sink, new_items, chunk_size=chunk_size,
+                     request_timeout=120)
                 progress_bar.update(chunk_size)
                 new_items = []
 
         bulk(es_sink, new_items, chunk_size=chunk_size, request_timeout=120)
         progress_bar.update(len(new_items))
+    return indexed_ids
 
 
 def get_fields_to_annotate(doc, doc_type):
