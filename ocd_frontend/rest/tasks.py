@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from ocd_frontend import settings
-from ocd_frontend.es import ElasticsearchService
+from ocd_frontend.es import ElasticsearchService, percolate_documents
 from ocd_frontend.factory import create_celery_app
 
 celery = create_celery_app()
@@ -11,6 +11,11 @@ es_service = ElasticsearchService(
     settings.ELASTICSEARCH_HOST,
     settings.ELASTICSEARCH_PORT
 )
+
+
+@celery.task(ignore_result=True)
+def email_subscribers(document_ids, latest_date):
+    percolate_documents(document_ids, latest_date)
 
 
 @celery.task(ignore_result=True)
