@@ -37,7 +37,9 @@ class ElasticsearchService(object):
         return self._es.indices.put_template(*args, **kwargs)
 
 
-def percolate_documents(documents):
+def percolate_documents(documents, latest_date):
+    print('running percolate over {} documents'.format(len(documents)))
+
     es = ElasticsearchService(
         settings.ELASTICSEARCH_HOST, settings.ELASTICSEARCH_PORT)
     result = es.search(index=settings.SUBSCRIPTION_INDEX, body={
@@ -54,6 +56,7 @@ def percolate_documents(documents):
     })
 
     for hit in result['hits']['hits']:
+        print('got hit: ', hit['_source']['token'])
         subscription = hit['_source']
         document_indexes = hit['fields']['_percolator_document_slot']
 
@@ -64,6 +67,9 @@ def percolate_documents(documents):
             'New documents match your stored search',
             render_template(
                 'subscription_documents.txt',
+                subscription=subscription,
                 token=subscription['token'],
-                docs=matched_documents)
+                docs=matched_documents,
+                latest_date=latest_date,
+            )
         )
