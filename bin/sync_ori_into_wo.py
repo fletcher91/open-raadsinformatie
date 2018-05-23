@@ -248,11 +248,11 @@ def get_available_collections():
                 'terms': ['Municipality']
             }
         },
-        'size': 100
+        'size': 500
     })
     data = resp.json()
-    if data['meta']['total'] > 100:
-        print('WARNING: only loading 100/{} municipalities'.format(data['meta']['total']))
+    if data['meta']['total'] > 500:
+        print('WARNING: only loading 500/{} municipalities'.format(data['meta']['total']))
 
     available_collections = {
         next(
@@ -360,5 +360,5 @@ if __name__ == '__main__':
         ori_collections = get_available_collections()
         for i, code__props in enumerate(sorted(ori_collections.iteritems())):
             cbs_code, ori_props = code__props
-            print('\n' * 5 + u'{}/{} -- {}'.format(i, len(ori_collections), ori_props['ori_name']))
+            print('\n' * 5 + u'{}/{} -- {}'.format(1 + i, len(ori_collections), ori_props['ori_name']))
             geocode_collection(ori_props['ori_alias'], cbs_code)
