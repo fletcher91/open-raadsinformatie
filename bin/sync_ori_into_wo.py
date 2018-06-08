@@ -220,7 +220,10 @@ def annotate_document(doc, municipality_code):
 
     if errors:
         # write errors to json lines
-        with open('log/geocoding_errors_{}.log'.format(municipality_code), 'a') as f:
+        with open(os.path.join(
+            BASE_DIR,
+            'log/geocoding_errors_{}.log'.format(municipality_code)
+        ), 'a') as f:
             for error_dict in errors:
                 f.write(json.dumps(error_dict) + '\n')
 
