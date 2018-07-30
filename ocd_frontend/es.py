@@ -57,7 +57,7 @@ def get_percolate_query(document):
     }
 
 
-def percolate_documents(documents, latest_date):
+def percolate_documents(documents, latest_date, dry_run=False):
     es = ElasticsearchService(
         settings.ELASTICSEARCH_HOST, settings.ELASTICSEARCH_PORT)
 
@@ -79,14 +79,15 @@ def percolate_documents(documents, latest_date):
         docs = matched_documents[id_]
         print('subscription {} matched {} documents'.format(id_, len(docs)))
 
-        mail.send(
-            subscription['email'],
-            'New documents match your stored search',
-            render_template(
-                'subscription_documents.txt',
-                subscription=subscription,
-                token=subscription['token'],
-                docs=docs,
-                latest_date=latest_date,
+        if not dry_run:
+            mail.send(
+                subscription['email'],
+                'New documents match your stored search',
+                render_template(
+                    'subscription_documents.txt',
+                    subscription=subscription,
+                    token=subscription['token'],
+                    docs=docs,
+                    latest_date=latest_date,
+                )
             )
-        )

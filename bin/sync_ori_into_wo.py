@@ -41,6 +41,10 @@ parser.add_argument(
     nargs='?',
     help='CBS municipality code "GM\d\d\d\d"'
 )
+parser.add_argument(
+    '--dry-run',
+    action='store_true',
+)
 args = parser.parse_args()
 
 
@@ -70,7 +74,7 @@ def geocode_collection(source_index, municipality_code):
         for bucket in buckets:
             bucket_docs = load_bucket(source_index, municipality_code, latest_date, bucket)
             docs.extend(bucket_docs)
-            tasks.email_subscribers.apply(args=[bucket_docs, latest_date])
+            tasks.email_subscribers.apply(args=[bucket_docs, latest_date, args.dry_run])
 
         sink_count = es_sink.count(index=waaroverheid_index)['count']
     else:
