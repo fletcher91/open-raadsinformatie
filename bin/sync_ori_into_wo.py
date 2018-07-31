@@ -28,26 +28,6 @@ from ocd_frontend.rest import tasks
 from ocd_frontend.es import percolate_documents
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    'source_collection',
-    default=None,
-    nargs='?',
-    help='The ES index used as data source'
-)
-parser.add_argument(
-    'municipality_code',
-    default=None,
-    nargs='?',
-    help='CBS municipality code "GM\d\d\d\d"'
-)
-parser.add_argument(
-    '--dry-run',
-    action='store_true',
-)
-args = parser.parse_args()
-
-
 ES_HOST = 'localhost'
 ES_SOURCE_PORT = 9797
 ES_SINK_PORT = 9200
@@ -57,6 +37,42 @@ es_sink = Elasticsearch([{'host': ES_HOST, 'port': ES_SINK_PORT}])
 
 mongo_client = MongoClient()
 llv_db = mongo_client.osm_globe
+
+
+def arg_parser():
+    def parse_date(date_str):
+        try:
+            return datetime.datetime.strptime(date_str, '%Y-%m-%d')
+        except ValueError:
+            msg = 'Not a valid date: {}'.format(date_str)
+            raise argparse.ArgumentTypeError(msg)
+
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'source_collection',
+        default=None,
+        nargs='?',
+        help='The ES index used as data source'
+    )
+    parser.add_argument(
+        'municipality_code',
+        default=None,
+        nargs='?',
+        help='CBS municipality code "GM\d\d\d\d"'
+    )
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='don\'t actually send notification emails',
+    )
+    parser.add_argument(
+        '--start-date',
+        default=None,
+        help='start indexing documents from this date (format: YYYY-MM-DD)',
+        type=parse_date
+    )
+    return parser.parse_args()
 
 
 def geocode_collection(source_index, municipality_code):
@@ -285,6 +301,8 @@ def get_available_collections():
 
 
 def get_date_aggregations(es_connection, alias, date_from=None):
+    if date_from is None:
+        date_from = args.start_date
     if not es_connection.indices.exists(index=alias):
         return None, None
 
@@ -353,6 +371,7 @@ def get_incomplete_buckets(ori_alias, waaroverheid_index):
 
 
 if __name__ == '__main__':
+    args = arg_parser()
     # PUT Elasticsearch mapping template
     wo_template_file = 'wo_template.json'
     with open(os.path.join(BASE_DIR, 'es_mappings', wo_template_file)) as f:
