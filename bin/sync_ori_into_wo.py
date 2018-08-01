@@ -25,7 +25,6 @@ sys.path.insert(0, os.path.abspath(BASE_DIR))
 
 from ocd_frontend.rest.snippets import add_doc_snippets
 from ocd_frontend.rest import tasks
-from ocd_frontend.es import percolate_documents
 
 
 ES_HOST = 'localhost'
