@@ -85,12 +85,13 @@ def geocode_collection(source_index, municipality_code):
 
     if source_count > sink_count:
         latest_date, buckets = get_incomplete_buckets(source_index, waaroverheid_index)
-        docs = []
+        loaded_docs = []
         for bucket in buckets:
             bucket_docs = load_bucket(source_index, municipality_code, latest_date, bucket)
-            docs.extend(bucket_docs)
-            tasks.email_subscribers.apply(args=[bucket_docs, latest_date, args.dry_run])
+            loaded_docs += bucket_docs
 
+        # TODO: test apply_async
+        tasks.email_subscribers.apply(args=[loaded_docs, latest_date, args.dry_run])
         sink_count = es_sink.count(index=waaroverheid_index)['count']
     else:
         print('Skipping: source {} docs, sink {} docs'.format(source_count, sink_count))
@@ -165,7 +166,7 @@ def load_bucket(source_index, municipality_code, latest_date, bucket):
             add_doc_snippets(annotated_item['_source'])
 
             new_items.append(annotated_item)
-            indexed_docs.append(annotated_item)
+            indexed_docs.append(shrunk_doc(annotated_item))
             if len(new_items) >= chunk_size:
                 bulk(es_sink, new_items, chunk_size=chunk_size,
                      request_timeout=120)
@@ -174,6 +175,7 @@ def load_bucket(source_index, municipality_code, latest_date, bucket):
 
         bulk(es_sink, new_items, chunk_size=chunk_size, request_timeout=120)
         progress_bar.update(len(new_items))
+
     return indexed_docs
 
 
@@ -367,6 +369,13 @@ def get_incomplete_buckets(ori_alias, waaroverheid_index):
             incomplete_weeks.append(week)
 
     return latest_sink_date, incomplete_weeks
+
+
+def shrunk_doc(document):
+    doc = document.copy()
+    doc_source = doc.pop('_source', {})
+    doc['name'] = doc_source.get('name')
+    return doc
 
 
 if __name__ == '__main__':

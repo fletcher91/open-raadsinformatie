@@ -14,8 +14,8 @@ es_service = ElasticsearchService(
 
 
 @celery.task(ignore_result=True)
-def email_subscribers(document_ids, latest_date, dry_run=False):
-    percolate_documents(document_ids, latest_date, dry_run)
+def email_subscribers(documents, latest_date, dry_run=False):
+    percolate_documents(documents, latest_date, dry_run)
 
 
 @celery.task(ignore_result=True)
