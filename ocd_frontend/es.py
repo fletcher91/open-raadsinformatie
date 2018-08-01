@@ -75,19 +75,19 @@ def percolate_documents(documents, latest_date, dry_run=False):
                 subscriptions[hit['_id']] = subscription
                 matched_documents[hit['_id']].append(document)
 
-    for id_, subscription in subscriptions.items():
-        docs = matched_documents[id_]
-        print('subscription {} matched {} documents'.format(id_, len(docs)))
+    for subscription_id, subscription in subscriptions.items():
+        docs = matched_documents[subscription_id]
+        print('subscription {} matched {} documents'.format(subscription_id, len(docs)))
 
         if not dry_run:
             mail.send(
                 subscription['email'],
                 'New documents match your stored search',
                 render_template(
-                    'subscription_documents.txt',
+                    'alert_email.txt',
                     subscription=subscription,
                     token=subscription['token'],
-                    docs=docs,
+                    doc_count=len(docs),
                     latest_date=latest_date,
                 )
             )
