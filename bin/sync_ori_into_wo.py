@@ -302,8 +302,6 @@ def get_available_collections():
 
 
 def get_date_aggregations(es_connection, alias, date_from=None):
-    if date_from is None:
-        date_from = args.start_date
     if not es_connection.indices.exists(index=alias):
         return None, None
 
