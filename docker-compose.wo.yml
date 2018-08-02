@@ -67,3 +67,9 @@ volumes:
         driver: local
     redisdata:
         driver: local
+
+networks:
+    wo_bridge:
+        driver: bridge
+        driver_opts:
+            com.docker.network.bridge.name: wo-bridge
