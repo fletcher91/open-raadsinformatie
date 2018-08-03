@@ -50,7 +50,7 @@ services:
             - http.host=0.0.0.0
             - node.master=true
             - xpack.security.enabled=false
-            - reindex.remote.whitelist=localhost:*
+            - reindex.remote.whitelist=dockerhost:*
         volumes:
             - esdata:/usr/share/elasticsearch/data
         restart: unless-stopped
