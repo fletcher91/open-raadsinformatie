@@ -3,7 +3,7 @@ version: "2.2"
 services:
 
     frontend:
-        container_name: frontend
+        container_name: ${COMPOSE_PROJECT_NAME}_frontend
         build: ./ocd_frontend
         image: 'ori_frontend'
         volumes:
@@ -22,7 +22,7 @@ services:
             - wo_bridge
 
     celery:
-        container_name: celery
+        container_name: ${COMPOSE_PROJECT_NAME}_celery
         build:
           context: ./ocd_frontend
           dockerfile: Docker-celery
@@ -39,7 +39,7 @@ services:
             - wo_bridge
 
     redis:
-        container_name: redis
+        container_name: ${COMPOSE_PROJECT_NAME}_redis
         image: 'redis'
         volumes:
          - redisdata:/data
@@ -53,8 +53,10 @@ services:
             - wo_bridge
 
     elasticsearch:
-        container_name: elasticsearch
+        container_name: ${COMPOSE_PROJECT_NAME}_elasticsearch
         image: "docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION}"
+        user: "root"
+        command: /bin/su -c "/bin/bash ./bin/es-docker" elasticsearch
         environment:
             - network.host=0.0.0.0
             - http.host=0.0.0.0
