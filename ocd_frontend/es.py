@@ -79,20 +79,23 @@ def percolate_documents(documents, latest_date, dry_run=False):
         docs = matched_documents[subscription_id]
         print('subscription {} matched {} documents'.format(subscription_id, len(docs)))
 
+        if not dry_run:
+            email_subscription(subscription, docs, len(docs), latest_date)
+        else:
+            print('\n', subscription['email'])
+            print(email_body)
+
+
+def email_subscription(subscription, docs, doc_count, latest_date):
         email_body = render_template(
             'alert_email.txt',
             subscription=subscription,
             token=subscription['token'],
-            doc_count=len(docs),
+            doc_count=doc_count,
             latest_date=latest_date,
         )
-
-        if not dry_run:
-            mail.send(
-                subscription['email'],
-                'Nieuwe resultaten beschikbaar voor uw opgeslagen zoekopdracht in {}'.format(subscription['area_name']),
-                email_body,
-            )
-        else:
-            print('\n', subscription['email'])
-            print(email_body)
+        mail.send(
+            subscription['email'],
+            'Nieuwe resultaten beschikbaar voor uw opgeslagen zoekopdracht in {}'.format(subscription['area_name']),
+            email_body,
+        )
