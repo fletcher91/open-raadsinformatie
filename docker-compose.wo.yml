@@ -3,6 +3,7 @@ version: "2.2"
 services:
 
     frontend:
+        container_name: ${COMPOSE_PROJECT_NAME}_frontend
         build: ./ocd_frontend
         image: 'ori_frontend'
         volumes:
@@ -17,8 +18,11 @@ services:
         depends_on:
           elasticsearch:
             condition: service_healthy
+        networks:
+            - wo_bridge
 
     celery:
+        container_name: ${COMPOSE_PROJECT_NAME}_celery
         build:
           context: ./ocd_frontend
           dockerfile: Docker-celery
@@ -31,8 +35,11 @@ services:
         depends_on:
           elasticsearch:
             condition: service_healthy
+        networks:
+            - wo_bridge
 
     redis:
+        container_name: ${COMPOSE_PROJECT_NAME}_redis
         image: 'redis'
         volumes:
          - redisdata:/data
@@ -42,16 +49,23 @@ services:
         mem_limit: 2g
         ports:
             - "127.0.0.1:6379:6379"
+        networks:
+            - wo_bridge
 
     elasticsearch:
+        container_name: ${COMPOSE_PROJECT_NAME}_elasticsearch
         image: "docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION}"
+        user: "root"
+        command: /bin/su -c "/bin/bash ./bin/es-docker" elasticsearch
         environment:
             - network.host=0.0.0.0
             - http.host=0.0.0.0
             - node.master=true
             - xpack.security.enabled=false
+            - reindex.remote.whitelist=dockerhost:*
         volumes:
             - esdata:/usr/share/elasticsearch/data
+            - ${PWD}/ocd_frontend/set_dockerhost_alias.sh:/usr/share/elasticsearch/bin/set_dockerhost_alias.sh:ro
         restart: unless-stopped
         ports:
             - "127.0.0.1:9200:9200"
@@ -60,9 +74,17 @@ services:
           interval: 15s
           timeout: 10s
           retries: 3
+        networks:
+            - wo_bridge
 
 volumes:
     esdata:
         driver: local
     redisdata:
         driver: local
+
+networks:
+    wo_bridge:
+        driver: bridge
+        driver_opts:
+            com.docker.network.bridge.name: wo-bridge
