@@ -8,24 +8,25 @@
 docker exec ori_elasticsearch yum install -y iproute
 docker exec ori_elasticsearch bin/set_dockerhost_alias.sh
 
-# TODO: listen only on wo-bridge
-ssh -M -S waaroverheid.sock -fnNT -L :9292:localhost:9200 waaroverheid
-
-curl -XPOST "localhost:9200/_reindex" -d'
+# set up ssh tunnel to listen only on wo-bridge
+WO_BRIDGE_IP="$(ip addr show wo-bridge | sed -En -e 's/.*inet ([0-9.]+).*/\1/p')"
+ssh -M -S "$1.sock" -fnNT -L "$WO_BRIDGE_IP:9292:localhost:9200" "$1" \
+&& curl -XPOST "localhost:9200/_reindex" -d'
 {
   "conflicts": "proceed",
   "source": {
     "remote": {
       "host": "http://dockerhost:9292"
     },
-    "index": "wo_gm0180",
+    "index": "usage_logs_wo",
     "size": 200
   },
   "dest": {
-    "index": "wo_gm0180",
+    "index": "usage_logs_wo",
     "op_type": "create"
   }
 }
 '
+# FIXME: the index name won't expand within single quotes
 
-ssh -S waaroverheid.sock -O exit waaroverheid
+ssh -S "$1.sock" -O exit "$1"
