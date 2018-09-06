@@ -77,22 +77,25 @@ def percolate_documents(documents, latest_date, dry_run=False):
 
     for subscription_id, subscription in subscriptions.items():
         docs = matched_documents[subscription_id]
-        print('subscription {} matched {} documents'.format(subscription_id, len(docs)))
+        doc_count = len(docs)
+        print("subscription {}: found {} docs, sending email to {}"
+              .format(subscription['_id'], doc_count, subscription['email']))
 
         if not dry_run:
-            email_subscription(subscription, docs, len(docs), latest_date)
-        else:
-            print('\n', subscription['email'])
-            print(email_body)
+            email_subscription(subscription, doc_count, latest_date)
 
 
-def email_subscription(subscription, docs, doc_count, latest_date):
+def email_subscription(subscription, doc_count, latest_date):
+        new_since = latest_date
+        if hasattr(new_since, 'isoformat'):
+            new_since = new_since.isoformat()
+
         email_body = render_template(
             'alert_email.txt',
             subscription=subscription,
             token=subscription['token'],
             doc_count=doc_count,
-            latest_date=latest_date,
+            latest_date=new_since,
         )
         mail.send(
             subscription['email'],

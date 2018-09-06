@@ -67,11 +67,10 @@ def main(args):
             subscription, args.loaded_since, es)
 
         if doc_count > 0:
-            print("subscription {}: found {} docs, sending email"
-                  .format(subscription['_id'], doc_count))
+            print("subscription {}: found {} docs, sending email to {}"
+                  .format(subscription['_id'], doc_count, subscription['email']))
             if not args.dry_run:
-                email_subscription(subscription, doc_sample, doc_count,
-                                   latest_date)
+                email_subscription(subscription, doc_count, args.loaded_since)
         else:
             print("subscription {}: no docs found, skipping"
                   .format(subscription['_id']))
