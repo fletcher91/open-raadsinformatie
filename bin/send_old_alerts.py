@@ -8,6 +8,7 @@ import os
 import sys
 
 from elasticsearch import Elasticsearch
+from elasticsearch.exceptions import NotFoundError
 from elasticsearch.helpers import scan
 
 BASE_DIR = os.path.dirname(
@@ -47,10 +48,14 @@ def find_matching_docs(subscription, loaded_since, es):
             'meta.processing_finished': {'gt': loaded_since}
         }
     }
-    result = es.search(
-        body=query,
-        index=subscription["_type"],
-    )
+    try:
+        result = es.search(
+            body=query,
+            index=subscription["_type"],
+        )
+    except NotFoundError:
+        return 0, []
+
     return result['hits']['total'], result['hits']['hits']
 
 
