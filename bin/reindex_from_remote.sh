@@ -10,7 +10,9 @@ docker exec ori_elasticsearch bin/set_dockerhost_alias.sh
 
 # set up ssh tunnel to listen only on wo-bridge
 WO_BRIDGE_IP="$(ip addr show wo-bridge | sed -En -e 's/.*inet ([0-9.]+).*/\1/p')"
-ssh -M -S "$1.sock" -fnNT -L "$WO_BRIDGE_IP:9292:localhost:9200" "$1" \
+SOCKET_PATH="/tmp/$1.sock"
+
+ssh -M -S "$SOCKET_PATH" -fnNT -L "$WO_BRIDGE_IP:9292:localhost:9200" "$1" \
 && curl -XPOST "localhost:9200/_reindex" -d'
 {
   "conflicts": "proceed",
@@ -29,4 +31,4 @@ ssh -M -S "$1.sock" -fnNT -L "$WO_BRIDGE_IP:9292:localhost:9200" "$1" \
 '
 # FIXME: the index name won't expand within single quotes
 
-ssh -S "$1.sock" -O exit "$1"
+ssh -S "$SOCKET_PATH" -O exit "$1"
