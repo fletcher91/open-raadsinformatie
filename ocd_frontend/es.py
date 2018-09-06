@@ -79,7 +79,7 @@ def percolate_documents(documents, latest_date, dry_run=False):
         docs = matched_documents[subscription_id]
         doc_count = len(docs)
         print("subscription {}: found {} docs, sending email to {}"
-              .format(subscription['_id'], doc_count, subscription['email']))
+              .format(subscription_id, doc_count, subscription['email']))
 
         if not dry_run:
             email_subscription(subscription, doc_count, latest_date)

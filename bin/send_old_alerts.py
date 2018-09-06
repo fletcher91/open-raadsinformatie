@@ -36,9 +36,12 @@ def get_elasticsearch_connection():
 
 
 def get_subscriptions(es):
-    q = {'query': { 'match_all': {}}}
-    result = scan(client=es, query=q, index=settings.SUBSCRIPTION_INDEX)
-    return result
+    q = {'query': {'match_all': {}}}
+    subscription_hits = scan(client=es, query=q, index=settings.SUBSCRIPTION_INDEX)
+    for hit in subscription_hits:
+        hit.update(hit.pop('_source'))
+
+    return subscription_hits
 
 
 def find_matching_docs(subscription, loaded_since, es):
