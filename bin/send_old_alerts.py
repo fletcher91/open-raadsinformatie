@@ -48,12 +48,25 @@ def get_subscriptions(es):
 
 
 def find_matching_docs(subscription, loaded_since, es):
-    query = {"query": subscription['query']}
-    query['query']['bool']['filter'] = {
+    query = {'query': subscription['query']}
+    query['query']['bool']['filter'].append({
         'range': {
-            'meta.processing_finished': {'gt': loaded_since}
+            'meta.processing_finished': {'from': loaded_since}
         }
-    }
+    })
+    query['query']['bool']['should'] = [
+	{
+	    'exists': {
+		'field': 'sources.snippets'
+	    }
+	},
+	{
+	    'exists': {
+		'field': 'description'
+	    }
+	},
+    ]
+    query['query']['bool']['minimum_should_match'] = 1
     try:
         result = es.search(
             body=query,
@@ -61,7 +74,8 @@ def find_matching_docs(subscription, loaded_since, es):
         )
     except NotFoundError:
         return 0, []
-
+    
+    # FIXME: hit count is not the same as with the URI and frontend
     return result['hits']['total'], result['hits']['hits']
 
 
