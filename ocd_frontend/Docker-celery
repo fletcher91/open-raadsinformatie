@@ -6,4 +6,4 @@ RUN adduser -D -H celery \
 
 USER celery
 WORKDIR /opt/ori
-CMD celery -A ocd_frontend.rest.tasks worker -l info
+CMD celery -A ocd_frontend.rest.tasks worker -E -l info
