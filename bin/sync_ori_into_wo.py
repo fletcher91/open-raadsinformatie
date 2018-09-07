@@ -23,23 +23,10 @@ BASE_DIR = os.path.dirname(
 )
 sys.path.insert(0, os.path.abspath(BASE_DIR))
 
+from ocd_frontend import settings
+from ocd_frontend.es import percolate_documents
+from ocd_frontend.rest import create_app
 from ocd_frontend.rest.snippets import add_doc_snippets
-
-
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    'source_collection',
-    default=None,
-    nargs='?',
-    help='The ES index used as data source'
-)
-parser.add_argument(
-    'municipality_code',
-    default=None,
-    nargs='?',
-    help='CBS municipality code "GM\d\d\d\d"'
-)
-args = parser.parse_args()
 
 
 ES_HOST = 'localhost'
@@ -53,8 +40,51 @@ mongo_client = MongoClient()
 llv_db = mongo_client.osm_globe
 
 
+def arg_parser():
+    def parse_date(date_str):
+        try:
+            return datetime.strptime(date_str, '%Y-%m-%d')
+        except ValueError:
+            msg = 'Not a valid date: {}'.format(date_str)
+            raise argparse.ArgumentTypeError(msg)
+
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'source_collection',
+        default=None,
+        nargs='?',
+        help='The ES index used as data source'
+    )
+    parser.add_argument(
+        'municipality_code',
+        default=None,
+        nargs='?',
+        help='CBS municipality code "GM\d\d\d\d"'
+    )
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='don\'t actually send notification emails',
+    )
+    parser.add_argument(
+        '--start-date',
+        default=None,
+        help='start indexing documents from this date (format: YYYY-MM-DD)',
+        type=parse_date
+    )
+    return parser.parse_args()
+
+
 def geocode_collection(source_index, municipality_code):
     print('\nGeocoding {} for municipality {}'.format(source_index, municipality_code))
+    app = create_app({
+        'ELASTICSEARCH_HOST': 'localhost',
+        'CELERY_BROKER_URL': 'redis://localhost:6379/1',
+    })
+    # FIXME: monkeypatching settings may interact with flask app config
+    settings.ELASTICSEARCH_HOST = 'localhost'
+
     waaroverheid_index = 'wo_{}'.format(municipality_code.lower())
     source_count = es_source.count(index=source_index)['count']
     try:
@@ -64,8 +94,15 @@ def geocode_collection(source_index, municipality_code):
 
     if source_count > sink_count:
         latest_date, buckets = get_incomplete_buckets(source_index, waaroverheid_index)
+        loaded_docs = []
         for bucket in buckets:
-            load_bucket(source_index, municipality_code, latest_date, bucket)
+            bucket_docs = load_bucket(source_index, municipality_code, latest_date, bucket)
+            loaded_docs += bucket_docs
+
+        # FIXME: percolate_documents never matches subscriptions with actual data
+        # TODO: try passing the right settings to celery for tasks.email_subscribers to work
+        # with app.app_context():
+        #     percolate_documents(loaded_docs, latest_date, args.dry_run)
 
         sink_count = es_sink.count(index=waaroverheid_index)['count']
     else:
@@ -122,6 +159,7 @@ def load_bucket(source_index, municipality_code, latest_date, bucket):
     )
 
     new_items = []
+    indexed_docs = []
     with tqdm(total=bucket['doc_count']) as progress_bar:
         for item in items:
             item['_index'] = waaroverheid_index
@@ -140,13 +178,17 @@ def load_bucket(source_index, municipality_code, latest_date, bucket):
             add_doc_snippets(annotated_item['_source'])
 
             new_items.append(annotated_item)
+            indexed_docs.append(shrunk_doc(annotated_item))
             if len(new_items) >= chunk_size:
-                bulk(es_sink, new_items, chunk_size=chunk_size, request_timeout=120)
+                bulk(es_sink, new_items, chunk_size=chunk_size,
+                     request_timeout=120)
                 progress_bar.update(chunk_size)
                 new_items = []
 
         bulk(es_sink, new_items, chunk_size=chunk_size, request_timeout=120)
         progress_bar.update(len(new_items))
+
+    return indexed_docs
 
 
 def get_fields_to_annotate(doc, doc_type):
@@ -339,7 +381,15 @@ def get_incomplete_buckets(ori_alias, waaroverheid_index):
     return latest_sink_date, incomplete_weeks
 
 
+def shrunk_doc(document):
+    doc = document.copy()
+    doc_source = doc.pop('_source', {})
+    doc['name'] = doc_source.get('name')
+    return doc
+
+
 if __name__ == '__main__':
+    args = arg_parser()
     # PUT Elasticsearch mapping template
     wo_template_file = 'wo_template.json'
     with open(os.path.join(BASE_DIR, 'es_mappings', wo_template_file)) as f:

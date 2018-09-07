@@ -18,7 +18,8 @@ def create_app_factory(package_name, package_path, settings_override=None):
     app = Flask(package_name, instance_relative_config=True)
 
     app.config.from_object('ocd_frontend.settings')
-    app.config.from_object(settings_override)
+    if settings_override:
+        app.config.from_mapping(settings_override)
 
     app.es = ElasticsearchService(app.config['ELASTICSEARCH_HOST'],
                                   app.config['ELASTICSEARCH_PORT'])

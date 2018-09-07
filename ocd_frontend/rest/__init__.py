@@ -20,7 +20,6 @@ def create_app(settings_override=None):
         return resp
 
     app.after_request(add_cors_headers)
-
     put_alerts_template(app.es)
     put_mapping_template(app.es, 'ori_usage_logs')
     put_mapping_template(app.es, 'wo_user_feedback')

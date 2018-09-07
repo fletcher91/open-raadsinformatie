@@ -1,0 +1,15 @@
+Hallo,
+
+Er zijn {{ doc_count }} nieuwe resultaten beschikbaar voor uw opgeslagen zoekopdracht in {{ subscription.area_name }}.
+
+Klik op de onderstaande link om de resultaten te bekijken:
+
+https://app.waaroverheid.nl{{ subscription.querystring }}{% if '?' in subscription.querystring %}&{% else %}?{% endif %}loaded_since={{ latest_date }}&isDrawerOpen=true
+
+In het geval dat u deze meldingen wilt stopzetten en uw mailadres wilt verwijderen uit onze database, gebruik de volgende link:
+
+https://api.waaroverheid.nl/v0/subscription/{{ subscription._type }}/{{ token }}/delete
+
+Met vriendelijke groet,
+
+het WaarOverheid team
