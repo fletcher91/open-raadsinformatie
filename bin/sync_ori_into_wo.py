@@ -99,9 +99,10 @@ def geocode_collection(source_index, municipality_code):
             bucket_docs = load_bucket(source_index, municipality_code, latest_date, bucket)
             loaded_docs += bucket_docs
 
+        # FIXME: percolate_documents never matches subscriptions with actual data
         # TODO: try passing the right settings to celery for tasks.email_subscribers to work
-        with app.app_context():
-            percolate_documents(loaded_docs, latest_date, args.dry_run)
+        # with app.app_context():
+        #     percolate_documents(loaded_docs, latest_date, args.dry_run)
 
         sink_count = es_sink.count(index=waaroverheid_index)['count']
     else:
