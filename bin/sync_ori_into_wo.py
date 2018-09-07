@@ -41,7 +41,7 @@ llv_db = mongo_client.osm_globe
 def arg_parser():
     def parse_date(date_str):
         try:
-            return datetime.datetime.strptime(date_str, '%Y-%m-%d')
+            return datetime.strptime(date_str, '%Y-%m-%d')
         except ValueError:
             msg = 'Not a valid date: {}'.format(date_str)
             raise argparse.ArgumentTypeError(msg)
