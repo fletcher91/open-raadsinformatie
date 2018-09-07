@@ -16,9 +16,6 @@ from pygtrie import CharTrie
 from pymongo import MongoClient
 from tqdm import tqdm
 
-from ocd_frontend.es import percolate_documents
-from ocd_frontend.rest import create_app
-
 BASE_DIR = os.path.dirname(
     os.path.dirname(
         os.path.abspath(__file__)
@@ -26,6 +23,8 @@ BASE_DIR = os.path.dirname(
 )
 sys.path.insert(0, os.path.abspath(BASE_DIR))
 
+from ocd_frontend.es import percolate_documents
+from ocd_frontend.rest import create_app
 from ocd_frontend.rest.snippets import add_doc_snippets
 
 
