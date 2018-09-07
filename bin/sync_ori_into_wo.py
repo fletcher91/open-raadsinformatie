@@ -16,6 +16,9 @@ from pygtrie import CharTrie
 from pymongo import MongoClient
 from tqdm import tqdm
 
+from ocd_frontend.es import percolate_documents
+from ocd_frontend.rest import create_app
+
 BASE_DIR = os.path.dirname(
     os.path.dirname(
         os.path.abspath(__file__)
@@ -24,7 +27,6 @@ BASE_DIR = os.path.dirname(
 sys.path.insert(0, os.path.abspath(BASE_DIR))
 
 from ocd_frontend.rest.snippets import add_doc_snippets
-from ocd_frontend.rest import tasks
 
 
 ES_HOST = 'localhost'
@@ -76,6 +78,11 @@ def arg_parser():
 
 def geocode_collection(source_index, municipality_code):
     print('\nGeocoding {} for municipality {}'.format(source_index, municipality_code))
+    app = create_app({
+        'ELASTICSEARCH_HOST': 'localhost',
+        'CELERY_BROKER_URL': 'redis://localhost:6379/1',
+    })
+
     waaroverheid_index = 'wo_{}'.format(municipality_code.lower())
     source_count = es_source.count(index=source_index)['count']
     try:
@@ -90,8 +97,10 @@ def geocode_collection(source_index, municipality_code):
             bucket_docs = load_bucket(source_index, municipality_code, latest_date, bucket)
             loaded_docs += bucket_docs
 
-        # TODO: test apply_async
-        tasks.email_subscribers.apply(args=[loaded_docs, latest_date, args.dry_run])
+        # TODO: try passing the right settings to celery for tasks.email_subscribers to work
+        with app.app_context():
+            percolate_documents(loaded_docs, latest_date, args.dry_run)
+
         sink_count = es_sink.count(index=waaroverheid_index)['count']
     else:
         print('Skipping: source {} docs, sink {} docs'.format(source_count, sink_count))
