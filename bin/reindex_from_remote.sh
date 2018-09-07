@@ -20,11 +20,11 @@ ssh -M -S "$SOCKET_PATH" -fnNT -L "$WO_BRIDGE_IP:9292:localhost:9200" "$1" \
     "remote": {
       "host": "http://dockerhost:9292"
     },
-    "index": "usage_logs_wo",
+    "index": "alerts_wo",
     "size": 200
   },
   "dest": {
-    "index": "usage_logs_wo",
+    "index": "alerts_wo",
     "op_type": "create"
   }
 }
