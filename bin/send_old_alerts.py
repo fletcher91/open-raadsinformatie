@@ -20,6 +20,7 @@ sys.path.insert(0, os.path.abspath(BASE_DIR))
 
 from ocd_frontend import settings
 from ocd_frontend.es import email_subscription
+from ocd_frontend.rest import create_app
 
 
 def parse_date(date_str):
@@ -37,15 +38,17 @@ def get_elasticsearch_connection():
 
 def get_subscriptions(es):
     q = {'query': {'match_all': {}}}
+    subscriptions = []
     subscription_hits = scan(client=es, query=q, index=settings.SUBSCRIPTION_INDEX)
     for hit in subscription_hits:
         hit.update(hit.pop('_source'))
+        subscriptions.append(hit)
 
-    return subscription_hits
+    return subscriptions
 
 
 def find_matching_docs(subscription, loaded_since, es):
-    query = {"query": subscription['_source']['query']}
+    query = {"query": subscription['query']}
     query['query']['bool']['filter'] = {
         'range': {
             'meta.processing_finished': {'gt': loaded_since}
@@ -64,6 +67,7 @@ def find_matching_docs(subscription, loaded_since, es):
 
 def main(args):
     es = get_elasticsearch_connection()
+    app = create_app({'ELASTICSEARCH_HOST': 'localhost'})
 
     for subscription in get_subscriptions(es):
         doc_count, doc_sample = find_matching_docs(
@@ -73,7 +77,8 @@ def main(args):
             print("subscription {}: found {} docs, sending email to {}"
                   .format(subscription['_id'], doc_count, subscription['email']))
             if not args.dry_run:
-                email_subscription(subscription, doc_count, args.loaded_since)
+                with app.app_context():
+                    email_subscription(subscription, doc_count, args.loaded_since)
         else:
             print("subscription {}: no docs found, skipping"
                   .format(subscription['_id']))

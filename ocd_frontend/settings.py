@@ -1,6 +1,13 @@
 import os.path
 
+from dotenv import load_dotenv
+
+from .helpers import root_path
+
 DEBUG = True
+
+# load .env file
+load_dotenv(root_path('../.env'))
 
 # Sendgrid settings
 SENDGRID_API_KEY = os.environ.get('WO_SENDGRID_KEY')
