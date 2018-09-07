@@ -99,6 +99,6 @@ def email_subscription(subscription, doc_count, latest_date):
         )
         mail.send(
             subscription['email'],
-            'Nieuwe resultaten beschikbaar voor uw opgeslagen zoekopdracht in {}'.format(subscription['area_name']),
+            'Nieuwe resultaten beschikbaar voor uw opgeslagen zoekopdracht in {}'.format(subscription.get('area_name', subscription['querystring']),
             email_body,
         )
