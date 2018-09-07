@@ -42,7 +42,9 @@ def get_subscriptions(es):
     subscription_hits = scan(client=es, query=q, index=settings.SUBSCRIPTION_INDEX)
     for hit in subscription_hits:
         hit.update(hit.pop('_source'))
-        subscriptions.append(hit)
+        # FIXME: might as well query for activated subscriptions
+        if hit['activated']:
+            subscriptions.append(hit)
 
     return subscriptions
 
@@ -74,7 +76,7 @@ def find_matching_docs(subscription, loaded_since, es):
         )
     except NotFoundError:
         return 0, []
-    
+
     # FIXME: hit count is not the same as with the URI and frontend
     return result['hits']['total'], result['hits']['hits']
 
