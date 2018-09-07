@@ -33,6 +33,7 @@ def create_celery_app(app=None):
     app = app or create_app_factory('ocd_frontend', os.path.dirname(__file__))
     celery = Celery(__name__, broker=app.config['CELERY_BROKER_URL'])
     celery.conf.update(app.config)
+    celery.control.enable_events()
     TaskBase = celery.Task
 
     class ContextTask(TaskBase):
