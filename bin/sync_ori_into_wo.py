@@ -23,6 +23,7 @@ BASE_DIR = os.path.dirname(
 )
 sys.path.insert(0, os.path.abspath(BASE_DIR))
 
+from ocd_frontend import settings
 from ocd_frontend.es import percolate_documents
 from ocd_frontend.rest import create_app
 from ocd_frontend.rest.snippets import add_doc_snippets
@@ -81,6 +82,8 @@ def geocode_collection(source_index, municipality_code):
         'ELASTICSEARCH_HOST': 'localhost',
         'CELERY_BROKER_URL': 'redis://localhost:6379/1',
     })
+    # FIXME: monkeypatching settings may interact with flask app config
+    settings.ELASTICSEARCH_HOST = 'localhost'
 
     waaroverheid_index = 'wo_{}'.format(municipality_code.lower())
     source_count = es_source.count(index=source_index)['count']
