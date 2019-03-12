@@ -30,10 +30,10 @@ def create_app(settings_override=None):
 
 def put_alerts_template(es_service):
     template_file = 'wo_alerts.json'
-    with open(root_path('es_mappings', template_file)) as f:
+    with open(root_path('ocd_frontend', 'es_mappings', template_file)) as f:
         template = json.load(f)
 
-    with open(root_path('es_mappings', 'wo_template.json')) as f:
+    with open(root_path('ocd_frontend', 'es_mappings', 'wo_template.json')) as f:
         mapping_template = json.load(f)
 
     template['settings']['index']['analysis'] = mapping_template['settings']['index']['analysis']
