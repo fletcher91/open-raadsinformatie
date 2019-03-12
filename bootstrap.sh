@@ -37,5 +37,5 @@ cd /vagrant
 pip install Cython==0.21.2 && pip install -r requirements.txt
 
 echo "Starting"
-./manage.py elasticsearch create_indexes /vagrant/es_mappings/
+./manage.py elasticsearch create_indexes /vagrant/ocd_frontend/es_mappings/
 ./manage.py elasticsearch put_template

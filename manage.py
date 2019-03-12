@@ -186,15 +186,15 @@ def dumps():
 
 
 @command('put_template')
-@click.option('--template_file', default='es_mappings/ori_template.json',
+@click.option('--template_file', default='ocd_frontend/es_mappings/ori_template.json',
               type=click.File('rb'), help='Path to JSON file containing the template.')
 def es_put_template(template_file):
     """
     Put a template into Elasticsearch. A template contains settings and mappings
-    that should be applied to multiple indices. Check ``es_mappings/ocd_template.json``
+    that should be applied to multiple indices. Check ``ocd_frontend/es_mappings/ocd_template.json``
     for an example.
 
-    :param template_file: Path to JSON file containing the template. Defaults to ``es_mappings/ocd_template.json``.
+    :param template_file: Path to JSON file containing the template. Defaults to ``ocd_frontend/es_mappings/ocd_template.json``.
     """
     click.echo('Putting ES template: %s' % template_file.name)
 

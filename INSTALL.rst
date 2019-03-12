@@ -142,7 +142,7 @@ Create or go to the directory where you want to place the NPO Backstage files.
 
 8. Initialize the Elasticsearch instance::
 
-   $ ./manage.py elasticsearch create_indexes es_mappings
+   $ ./manage.py elasticsearch create_indexes ocd_frontend/es_mappings
    $ ./manage.py elasticsearch put_template
 
 Usage

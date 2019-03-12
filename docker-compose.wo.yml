@@ -8,7 +8,7 @@ services:
         image: 'ori_frontend'
         volumes:
             - ./ocd_frontend:/opt/ori/ocd_frontend
-            - ./es_mappings:/opt/ori/ocd_frontend/es_mappings:ro
+            - ./ocd_frontend/es_mappings:/opt/ori/ocd_frontend/es_mappings:ro
         command: python wsgi.py
         restart: unless-stopped
         ports:
@@ -28,7 +28,7 @@ services:
           dockerfile: Docker-celery
         volumes:
             - ./ocd_frontend:/opt/ori/ocd_frontend
-            - ./es_mappings:/opt/ori/ocd_frontend/es_mappings:ro
+            - ./ocd_frontend/es_mappings:/opt/ori/ocd_frontend/es_mappings:ro
         restart: unless-stopped
         environment:
             - WO_SENDGRID_KEY
