@@ -14,27 +14,27 @@ SENDGRID_API_KEY = os.environ.get('WO_SENDGRID_KEY')
 SENDGRID_FROM_ADDRESS = 'no-reply@waaroverheid.nl'
 
 # Celery settings
-CELERY_BROKER_URL = 'redis://redis:6379/1'
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/1')
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
 # Elasticsearch
-ELASTICSEARCH_HOST = 'elasticsearch'
-ELASTICSEARCH_PORT = 9200
+ELASTICSEARCH_HOST = os.getenv('ELASTICSEARCH_HOST', 'elasticsearch')
+ELASTICSEARCH_PORT = os.getenv('ELASTICSEARCH_PORT', 9200)
 
 # The default number of hits to return for a search request via the REST API
-DEFAULT_SEARCH_SIZE = 10
+DEFAULT_SEARCH_SIZE = os.getenv('DEFAULT_SEARCH_SIZE', 10)
 
 # The max. number of hits to return for a search request via the REST API
-MAX_SEARCH_SIZE = 100
+MAX_SEARCH_SIZE = os.getenv('MAX_SEARCH_SIZE', 100)
 
 # The name of the index containing documents from all sources
-COMBINED_INDEX = 'ori_combined_index'
+COMBINED_INDEX = os.getenv('COMBINED_INDEX', 'ori_combined_index')
 
 # the index storing subscriptions
-SUBSCRIPTION_INDEX = 'alerts_wo'
+SUBSCRIPTION_INDEX = os.getenv('SUBSCRIPTION_INDEX', 'alerts_wo')
 
 # The default prefix used for all data
-DEFAULT_INDEX_PREFIX = 'wo'
+DEFAULT_INDEX_PREFIX = os.getenv('DEFAULT_INDEX_PREFIX', 'wo')
 
 # The fields which can be used for sorting results via the REST API
 SORTABLE_FIELDS = {
@@ -364,14 +364,14 @@ AVAILABLE_HIGHLIGHTS = {
 ALLOWED_DATE_INTERVALS = ('day', 'week', 'month', 'quarter', 'year')
 
 # Name of the Elasticsearch index used to store URL resolve documnts
-RESOLVER_URL_INDEX = 'ori_resolver'
+RESOLVER_URL_INDEX = os.getenv('RESOLVER_URL_INDEX', 'ori_resolver')
 
 # Determines if API usage events should be logged
 USAGE_LOGGING_ENABLED = True
 # Name of the Elasticsearch index used to store logged events
-USAGE_LOGGING_INDEX = 'usage_logs_wo'
+USAGE_LOGGING_INDEX = os.getenv('USAGE_LOGGING_INDEX', 'usage_logs_wo')
 # Name of the Elasticsearch index used for user feedback
-USER_FEEDBACK_INDEX = 'user_feedback_wo'
+USER_FEEDBACK_INDEX = os.getenv('USER_FEEDBACK_INDEX', 'user_feedback_wo')
 
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 DUMPS_DIR = os.path.join(os.path.dirname(ROOT_PATH), 'dumps')
@@ -382,11 +382,11 @@ DATA_DIR_PATH = os.path.dirname(ROOT_PATH)
 # Should include API version and a trailing slash.
 # Can be overridden in the CLI when required, for instance when the user wants
 # to download dumps from another API instance than the one hosted by OpenState
-API_URL = 'http://frontend:5000/v0/'
+API_URL = os.getenv('API_URL', 'http://frontend:5000/v0/')
 
 # URL where collection dumps are hosted. This is used for generating full URLs
 # to dumps in the /dumps endpoint
-DUMP_URL = 'http://dumps.opencultuurdata.nl/'
+DUMP_URL = os.getenv('DUMP_URL', 'http://dumps.opencultuurdata.nl/')
 
 LOGGING = {
     'version': 1,

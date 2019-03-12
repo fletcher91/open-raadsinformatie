@@ -7,8 +7,8 @@ register('ocd_serializer', pickle.dumps, pickle.loads,
          content_encoding='binary',
          content_type='application/x-pickle2')
 
-REDIS_HOST = "redis"
-REDIS_PORT = "6379"
+REDIS_HOST = os.getenv(REDIS_HOST, "redis")
+REDIS_PORT = os.getenv(REDIS_PORT, "6379")
 
 CELERY_CONFIG = {
     'BROKER_URL': 'redis://%s:%s/0' % (REDIS_HOST, REDIS_PORT),
@@ -81,8 +81,8 @@ if os.path.exists('/var/log/backend.err'):
     LOGGING['loggers']['celery']['handlers'] = ['console', 'log', 'docker']
 
 
-ELASTICSEARCH_HOST = 'localhost'
-ELASTICSEARCH_PORT = 9200
+ELASTICSEARCH_HOST = os.getenv('ELASTICSEARCH_HOST', 'localhost')
+ELASTICSEARCH_PORT = os.getenv('ELASTICSEARCH_PORT', 9200)
 
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -96,13 +96,13 @@ DATA_DIR_PATH = os.path.join(ROOT_PATH, '../data')
 SOURCES_CONFIG_FILE = os.path.join(ROOT_PATH, 'sources/*')
 
 # The name of the index containing documents from all sources
-COMBINED_INDEX = 'ori_combined_index'
+COMBINED_INDEX = os.getenv('COMBINED_INDEX', 'ori_combined_index')
 
 # The default prefix used for all data
-DEFAULT_INDEX_PREFIX = 'ori'
+DEFAULT_INDEX_PREFIX = os.getenv('DEFAULT_INDEX_PREFIX', 'ori')
 
-RESOLVER_BASE_URL = 'http://localhost:5000/v0/resolve'
-RESOLVER_URL_INDEX = 'ori_resolver'
+RESOLVER_BASE_URL = os.getenv('RESOLVER_BASE_URL', 'http://localhost:5000/v0/resolve')
+RESOLVER_URL_INDEX = os.getenv('RESOLVER_URL_INDEX', 'ori_resolver')
 
 # The User-Agent that is used when retrieving data from external sources
 USER_AGENT = 'Open Raadsinformatie/0.1 (+http://www.openraadsinformatie.nl/)'
@@ -111,7 +111,7 @@ USER_AGENT = 'Open Raadsinformatie/0.1 (+http://www.openraadsinformatie.nl/)'
 # Should include API version and a trailing slash.
 # Can be overridden in the CLI when required, for instance when the user wants
 # to download dumps from another API instance than the one hosted by OpenState
-API_URL = 'http://frontend:5000/v0/'
+API_URL = os.getenv('API_URL', 'http://frontend:5000/v0/')
 
 # The endpoint for the iBabs API
 IBABS_WSDL = u'https://www.mijnbabs.nl/iBabsWCFService/Public.svc?singleWsdl'
