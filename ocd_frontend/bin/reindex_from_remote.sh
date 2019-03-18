@@ -5,8 +5,8 @@
 #$ ufw allow in on wo-bridge
 
 # set dockerhost alias in container
-docker exec ori_elasticsearch yum install -y iproute
-docker exec ori_elasticsearch bin/set_dockerhost_alias.sh
+# docker exec ori_elasticsearch yum install -y iproute
+# docker exec ori_elasticsearch bin/set_dockerhost_alias.sh
 
 # set up ssh tunnel to listen only on wo-bridge
 WO_BRIDGE_IP_RESOLVED="$(ip addr show wo-bridge | sed -En -e 's/.*inet ([0-9.]+).*/\1/p')"
