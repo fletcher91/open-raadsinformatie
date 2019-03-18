@@ -10,3 +10,4 @@ pymongo~=3.6
 requests~=2.18
 sendgrid~=5.3
 python-dotenv
+tqdm
