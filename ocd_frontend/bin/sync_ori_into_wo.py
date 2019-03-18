@@ -398,7 +398,7 @@ if __name__ == '__main__':
     args = arg_parser()
     # PUT Elasticsearch mapping template
     wo_template_file = 'wo_template.json'
-    with open(os.path.join(BASE_DIR, 'ocd_frontend', 'es_mappings', wo_template_file)) as f:
+    with open(os.path.join(BASE_DIR, 'es_mappings', wo_template_file)) as f:
         wo_template = json.load(f)
 
     print('Putting {} as template for {}'.format(wo_template_file, wo_template['template']))

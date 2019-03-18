@@ -46,7 +46,7 @@ def nltk_data(file_name):
 
 def put_mapping_template(es_service, template_name):
     template_file = template_name + '.json'
-    with open(root_path('ocd_frontend', 'es_mappings', template_file)) as f:
+    with open(root_path('es_mappings', template_file)) as f:
         log_template = json.load(f)
 
     print('Putting {} as template for {}'.format(template_file, log_template['template']))
