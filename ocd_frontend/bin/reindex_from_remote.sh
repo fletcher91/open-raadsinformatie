@@ -9,11 +9,16 @@ docker exec ori_elasticsearch yum install -y iproute
 docker exec ori_elasticsearch bin/set_dockerhost_alias.sh
 
 # set up ssh tunnel to listen only on wo-bridge
-WO_BRIDGE_IP="$(ip addr show wo-bridge | sed -En -e 's/.*inet ([0-9.]+).*/\1/p')"
+WO_BRIDGE_IP_RESOLVED="$(ip addr show wo-bridge | sed -En -e 's/.*inet ([0-9.]+).*/\1/p')"
+WO_BRIDGE_IP=${WO_BRIDGE_IP:-$WO_BRIDGE_IP_RESOLVED}
+WO_BRIDGE_PORT=${WO_BRIDGE_PORT:-9292}
 SOCKET_PATH="/tmp/$1.sock"
 
-ssh -M -S "$SOCKET_PATH" -fnNT -L "$WO_BRIDGE_IP:9292:localhost:9200" "$1" \
-&& curl -XPOST "localhost:9200/_reindex" -d'
+ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST:-localhost}
+ELASTICSEARCH_PORT=${ELASTICSEARCH_PORT:-9200}
+
+ssh -M -S "$SOCKET_PATH" -fnNT -L "$WO_BRIDGE_IP:$WO_BRIDGE_PORT:$ELASTICSEARCH_HOST:$ELASTICSEARCH_PORT" "$1" \
+&& curl -XPOST "$ELASTICSEARCH_HOST:$ELASTICSEARCH_PORT/_reindex" -d'
 {
   "conflicts": "proceed",
   "source": {

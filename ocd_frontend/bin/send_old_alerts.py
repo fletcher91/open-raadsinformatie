@@ -22,6 +22,8 @@ from ocd_frontend import settings
 from ocd_frontend.es import email_subscription
 from ocd_frontend.rest import create_app
 
+ELASTICSEARCH_HOST = os.getenv('ELASTICSEARCH_HOST', 'localhost')
+ELASTICSEARCH_PORT = os.getenv('ELASTICSEARCH_PORT', 9200)
 
 def parse_date(date_str):
     try:
@@ -32,8 +34,7 @@ def parse_date(date_str):
 
 
 def get_elasticsearch_connection():
-    ES_HOST, ES_PORT = 'localhost', 9200
-    return Elasticsearch([{'host': ES_HOST, 'port': ES_PORT}])
+    return Elasticsearch([{'host': ELASTICSEARCH_HOST, 'port': ELASTICSEARCH_PORT}])
 
 
 def get_subscriptions(es):
@@ -83,7 +84,7 @@ def find_matching_docs(subscription, loaded_since, es):
 
 def main(args):
     es = get_elasticsearch_connection()
-    app = create_app({'ELASTICSEARCH_HOST': 'localhost'})
+    app = create_app({'ELASTICSEARCH_HOST': ELASTICSEARCH_HOST})
 
     for subscription in get_subscriptions(es):
         doc_count, doc_sample = find_matching_docs(

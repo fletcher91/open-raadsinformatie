@@ -29,12 +29,13 @@ from ocd_frontend.rest import create_app
 from ocd_frontend.rest.snippets import add_doc_snippets
 
 
-ES_HOST = 'localhost'
-ES_SOURCE_PORT = 9797
-ES_SINK_PORT = 9200
+ELASTICSEARCH_HOST = os.getenv('ELASTICSEARCH_HOST', 'localhost')
+ELASTICSEARCH_PORT = os.getenv('ELASTICSEARCH_PORT', 9200)
+SOURCE_ELASTICSEARCH_HOST = os.getenv('SOURCE_ELASTICSEARCH_HOST', 'localhost')
+SOURCE_ELASTICSEARCH_PORT = os.getenv('SOURCE_ELASTICSEARCH_PORT', 9797)
 
-es_source = Elasticsearch([{'host': ES_HOST, 'port': ES_SOURCE_PORT}], timeout=30)
-es_sink = Elasticsearch([{'host': ES_HOST, 'port': ES_SINK_PORT}])
+es_source = Elasticsearch([{'host': SOURCE_ELASTICSEARCH_HOST, 'port': SOURCE_ELASTICSEARCH_PORT}], timeout=30)
+es_sink = Elasticsearch([{'host': ELASTICSEARCH_HOST, 'port': ELASTICSEARCH_PORT}])
 
 mongo_client = MongoClient()
 llv_db = mongo_client.osm_globe
@@ -79,11 +80,16 @@ def arg_parser():
 def geocode_collection(source_index, municipality_code):
     print('\nGeocoding {} for municipality {}'.format(source_index, municipality_code))
     app = create_app({
-        'ELASTICSEARCH_HOST': 'localhost',
-        'CELERY_BROKER_URL': 'redis://localhost:6379/1',
+        'ELASTICSEARCH_HOST': ELASTICSEARCH_HOST,
+        'CELERY_BROKER_URL': 'redis://'
+                             + os.getenv('REDIS_HOST', 'redis')
+                             + ':'
+                             + os.getenv('REDIS_PORT', 6379)
+                             + '/'
+                             + os.getenv('REDIS_DB', 1),
     })
     # FIXME: monkeypatching settings may interact with flask app config
-    settings.ELASTICSEARCH_HOST = 'localhost'
+    settings.ELASTICSEARCH_HOST = ELASTICSEARCH_HOST
 
     waaroverheid_index = 'wo_{}'.format(municipality_code.lower())
     source_count = es_source.count(index=source_index)['count']

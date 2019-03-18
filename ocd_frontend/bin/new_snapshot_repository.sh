@@ -5,7 +5,10 @@ cd $SNAPSHOT_DIR
 
 SNAPSHOT_PATH=`pwd`
 
-curl -XPUT "localhost:9200/_snapshot/$SNAPSHOT_DIR" -d"
+ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST:-localhost}
+ELASTICSEARCH_PORT=${ELASTICSEARCH_PORT:-9200}
+
+curl -XPUT "$ELASTICSEARCH_HOST:$ELASTICSEARCH_PORT/_snapshot/$SNAPSHOT_DIR" -d"
 {
     \"type\": \"fs\",
     \"settings\": {
